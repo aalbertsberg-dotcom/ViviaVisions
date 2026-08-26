@@ -1,12 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 150" role="img" aria-label="ViviaVisions">
-  <g transform="translate(10 24)">
-    <path d="M4 3h26l27 82L86 3h23L64 104H45L4 3Z" fill="#172536"/>
-    <path d="M43 3h22l25 66 16-34" fill="none" stroke="#B58336" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M31 58c23-29 54-46 86-51 12-2 19 3 16 11-5 18-31 30-59 39-30 10-59 14-75 8-13-5-9-18 5-27" fill="none" stroke="#B58336" stroke-width="3" stroke-linecap="round"/>
-    <path d="M108 47c10-14 16-26 20-39" fill="none" stroke="#B58336" stroke-width="3" stroke-linecap="round"/>
-    <path d="M115 40c8-2 14-8 18-16-9 0-15 5-18 16Zm7-15c-3-8-1-15 5-21 4 8 2 15-5 21Z" fill="#B58336"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 240" role="img" aria-label="ViviaVisions">
+  <rect width="900" height="240" fill="#fcfaf7"/>
+  <g transform="translate(42 28)">
+    <path d="M12 16h42l33 110L120 16h35L104 172H80L12 16Z" fill="#18253b"/>
+    <path d="M86 16h28l38 96 44-96" fill="none" stroke="#bb8a40" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M30 106c23-22 48-40 74-53 28-14 57-23 87-27 14-2 21 4 19 12-3 10-13 19-26 27-21 13-49 22-74 30-30 9-58 14-77 13-17-2-18-12-3-22Z" fill="none" stroke="#bb8a40" stroke-width="4" stroke-linecap="round"/>
+    <path d="M116 74c15-18 27-35 36-54" fill="none" stroke="#bb8a40" stroke-width="4" stroke-linecap="round"/>
+    <path d="M149 58c11-1 20-8 27-19-12 0-21 6-27 19Zm11-16c-4-8-2-16 5-24 5 8 4 16-5 24Z" fill="#bb8a40"/>
+    <path d="M169 47c10 0 18-5 23-15-11 1-18 6-23 15Z" fill="#bb8a40"/>
   </g>
-  <text x="154" y="91" font-family="Georgia, 'Times New Roman', serif" font-size="64" font-weight="600" letter-spacing="-2" fill="#172536">Vivia</text>
-  <text x="301" y="91" font-family="Georgia, 'Times New Roman', serif" font-size="64" font-weight="600" letter-spacing="-2" fill="#B58336">Visions</text>
-  <text x="158" y="121" font-family="Arial, Helvetica, sans-serif" font-size="12" letter-spacing="4.2" fill="#172536">EVERY DETAIL. EVERY OPTION. EVERY VISION.</text>
+  <text x="250" y="122" font-family="Bodoni Moda, Playfair Display, Georgia, serif" font-size="76" font-weight="600" letter-spacing="-2.2" fill="#18253b">Vivia</text>
+  <text x="430" y="122" font-family="Bodoni Moda, Playfair Display, Georgia, serif" font-size="76" font-weight="600" letter-spacing="-2.2" fill="#bb8a40">Visions</text>
+  <text x="252" y="162" font-family="Arial, Helvetica, sans-serif" font-size="18" letter-spacing="6" fill="#22334d">EVERY DETAIL. EVERY OPTION. EVERY VISION.</text>
 </svg>

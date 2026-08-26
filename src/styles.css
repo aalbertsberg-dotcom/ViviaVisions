@@ -41,16 +41,18 @@ a { color: inherit; }
   backdrop-filter: blur(14px);
 }
 .brand-button { border: 0; padding: 0; background: transparent; cursor: pointer; }
-.brand { display: flex; align-items: center; gap: 10px; }
-.brand__mark { width: 52px; height: 48px; overflow: visible; }
+.brand { display:flex; align-items:center; gap:12px; }
+.brand__mark { width: 60px; height: 50px; overflow: visible; flex: 0 0 auto; }
 .brand__v-left { fill: var(--brown); }
-.brand__v-right { fill: none; stroke: var(--clay); stroke-width: 4.2; stroke-linecap: round; stroke-linejoin: round; }
-.brand__flourish,.brand__stem { fill: none; stroke: var(--clay); stroke-width: 1.8; stroke-linecap: round; }
+.brand__v-right { fill: none; stroke: var(--clay); stroke-width: 4.8; stroke-linecap: round; stroke-linejoin: round; }
+.brand__flourish, .brand__flourish-tail { fill: none; stroke: var(--clay); stroke-width: 1.85; stroke-linecap: round; stroke-linejoin: round; }
 .brand__leaf { fill: var(--clay); }
-.brand__words { display:flex; align-items:center; line-height:1; }
-.brand__wordmark { display:inline-flex; align-items:baseline; font-family:'Bodoni Moda','Playfair Display',Georgia,serif; font-size:29px; font-weight:600; letter-spacing:-.045em; white-space:nowrap; }
-.brand__wordmark span:first-child { color:var(--brown); }
-.brand__wordmark span:last-child { color:var(--clay); }
+.brand__leaf--small { opacity: .94; }
+.brand__words { display:flex; flex-direction:column; align-items:flex-start; line-height:1; gap:4px; }
+.brand__wordmark { display:inline-flex; align-items:baseline; font-family:'Bodoni Moda','Playfair Display',Georgia,serif; font-size:31px; font-weight:600; letter-spacing:-.045em; white-space:nowrap; }
+.brand__wordmark-primary { color:var(--brown); }
+.brand__wordmark-accent { color:var(--clay); }
+.brand__submark { color:#6f7a89; font-size:9px; font-weight:700; letter-spacing:.28em; white-space:nowrap; }
 .main-nav { display: flex; align-items: center; gap: 5px; }
 .nav-link { position: relative; border: 0; background: transparent; padding: 10px 13px; border-radius: 999px; color: #726861; font-size: 14px; font-weight: 600; cursor: pointer; transition: .2s ease; }
 .nav-link:hover, .nav-link.active { background: var(--cream); color: var(--brown); }
@@ -430,8 +432,9 @@ h3 { color: var(--brown); }
 @media (max-width: 650px) {
   .shell { width:min(100% - 28px,1180px); }
   .site-header { padding-left:14px; padding-right:14px; }
-  .brand__mark { width:39px; height:39px; }
-  .brand__wordmark { font-size:25px; }
+  .brand__mark { width:45px; height:39px; }
+  .brand__wordmark { font-size:26px; }
+  .brand__submark { font-size:8px; letter-spacing:.18em; }
   .nav-link { padding:8px 9px; font-size:11px; }
   .nav-link.admin-link { margin-left:0; }
   .hero { min-height:auto; padding-top:35px; }
@@ -1143,8 +1146,9 @@ h3 { color: var(--brown); }
     padding: 10px 14px;
   }
   .brand-button { align-self: auto; }
-  .brand__mark { width: 42px; height: 42px; }
+  .brand__mark { width: 48px; height: 40px; }
   .brand__wordmark { font-size:25px; }
+  .brand__submark { display:none; }
   .header-wedding-chip { display: none; }
   .menu-toggle { min-width: 48px; min-height: 44px; justify-content: center; padding: 9px 12px; }
   .menu-toggle__label { display: none; }
@@ -2247,5 +2251,5 @@ body { font-size: 16px; line-height: 1.5; }
 .saas-cta h2,.saas-cta p { color:#fff; }
 .saas-cta .button--light { background:#f8efe2; color:#172536; }
 .site-footer.saas-footer { border-top:1px solid #e2d4c1; }
-.brand--compact .brand__mark { width:42px; height:38px; }
-@media (max-width: 680px) { .brand__wordmark { font-size:22px; letter-spacing:-.05em; } }
+.brand--compact .brand__mark { width:42px; height:36px; }
+@media (max-width: 680px) { .brand__wordmark { font-size:22px; letter-spacing:-.05em; } .brand__submark { display:none; } }
