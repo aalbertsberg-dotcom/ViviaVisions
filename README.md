@@ -102,3 +102,8 @@ git push
 - Added a subtle global footer credit linking to https://aalbertsberg.us/.
 - Uses the A³ blue cube logo supplied by the site creator.
 - Appears across ViviaVisions and venue-branded pages without competing with venue branding.
+
+
+## v1.7.5 footer refinement
+- Removed the visible aalbertsberg.us text from the creator credit.
+- Only A³ is the link to https://aalbertsberg.us/.

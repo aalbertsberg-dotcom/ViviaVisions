@@ -301,11 +301,10 @@ export default function App() {
                 ? <><span>ViviaVisions Admin</span><span>Internal proof of concept · {venueConfigs.length} venue profiles</span></>
                 : <><span>ViviaVisions</span><span>Event venue management & planning · venue-first private client workspaces</span></>}
           </div>
-          <a className="site-footer__creator" href="https://aalbertsberg.us/" target="_blank" rel="noopener noreferrer" aria-label="Created by A cubed at aalbertsberg.us">
+          <div className="site-footer__creator">
             <img src="./a3-cube-logo.png" alt="" />
-            <span>Created by <strong>A³</strong></span>
-            <small>aalbertsberg.us</small>
-          </a>
+            <span>Created by <a href="https://aalbertsberg.us/" target="_blank" rel="noopener noreferrer" aria-label="A cubed website"><strong>A³</strong></a></span>
+          </div>
         </div>
       </footer>
     </div>
