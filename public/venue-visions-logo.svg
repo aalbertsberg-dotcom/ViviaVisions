@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 150">
+  <g transform="translate(12,10)">
+    <path d="M18 112V58C18 25 41 4 68 4s50 21 50 54v54" fill="none" stroke="#58483f" stroke-width="7" stroke-linecap="round"/>
+    <path d="M37 48l31 66 31-66" fill="none" stroke="#c99464" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="22" cy="38" r="5" fill="#8ea18a"/>
+    <circle cx="111" cy="33" r="5" fill="#8ea18a"/>
+    <path d="M13 47c9-12 16-17 27-21M121 43c-8-11-15-16-25-20" fill="none" stroke="#8ea18a" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <text x="158" y="72" font-family="Georgia, 'Times New Roman', serif" font-size="52" fill="#58483f" letter-spacing="1">Vivia</text>
+  <text x="158" y="119" font-family="Arial, Helvetica, sans-serif" font-size="31" fill="#8c6f5f" letter-spacing="8">VISIONS</text>
+</svg>
