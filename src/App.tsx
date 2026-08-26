@@ -292,7 +292,22 @@ export default function App() {
       {page === 'admin' && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={ownerAuthenticated} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} />}
       {page === 'platform' && <PlatformAdmin authenticated={platformAuthenticated} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={weddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} />}
 
-      <footer className="site-footer saas-footer"><div className="shell">{ownerAuthenticated || coupleAuthenticatedWeddingId === activeWedding?.id || page === 'venue' ? <><span>{activeVenue.profile.shortName}</span><span>Powered by ViviaVisions</span></> : platformAuthenticated ? <><span>ViviaVisions Admin</span><span>Internal proof of concept · {venueConfigs.length} venue profiles</span></> : <><span>ViviaVisions</span><span>Event venue management & planning · venue-first private client workspaces</span></>}</div></footer>
+      <footer className="site-footer saas-footer">
+        <div className="shell">
+          <div className="site-footer__context">
+            {ownerAuthenticated || coupleAuthenticatedWeddingId === activeWedding?.id || page === 'venue'
+              ? <><span>{activeVenue.profile.shortName}</span><span>Powered by ViviaVisions</span></>
+              : platformAuthenticated
+                ? <><span>ViviaVisions Admin</span><span>Internal proof of concept · {venueConfigs.length} venue profiles</span></>
+                : <><span>ViviaVisions</span><span>Event venue management & planning · venue-first private client workspaces</span></>}
+          </div>
+          <a className="site-footer__creator" href="https://aalbertsberg.us/" target="_blank" rel="noopener noreferrer" aria-label="Created by A cubed at aalbertsberg.us">
+            <img src="./a3-cube-logo.png" alt="" />
+            <span>Created by <strong>A³</strong></span>
+            <small>aalbertsberg.us</small>
+          </a>
+        </div>
+      </footer>
     </div>
   )
 }

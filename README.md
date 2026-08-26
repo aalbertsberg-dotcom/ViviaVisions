@@ -96,3 +96,9 @@ git push
 - Updated the ViviaVisions logo to a more elegant navy-and-gold monogram with a softer flourish and leaf detail.
 - Refined the favicon to match the updated VV mark.
 - Tightened the main brand presentation so the header feels closer to the inspiration art direction.
+
+
+## v1.7.4 creator credit
+- Added a subtle global footer credit linking to https://aalbertsberg.us/.
+- Uses the A³ blue cube logo supplied by the site creator.
+- Appears across ViviaVisions and venue-branded pages without competing with venue branding.

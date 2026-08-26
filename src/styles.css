@@ -398,8 +398,15 @@ h3 { color: var(--brown); }
 .admin-table--inventory code { padding:4px 7px; border-radius:6px; background:#f4f1ed; color:#675c55; font-family:inherit; font-size:10px; }
 
 .site-footer { border-top:1px solid var(--line); background:#f7f3ee; }
-.site-footer .shell { min-height:68px; display:flex; align-items:center; justify-content:space-between; gap:20px; color:#93877f; font-size:11px; }
-.site-footer .shell span:first-child { font-family:'Playfair Display',Georgia,serif; color:var(--brown); font-size:15px; }
+.site-footer .shell { min-height:74px; display:flex; align-items:center; justify-content:space-between; gap:24px; color:#93877f; font-size:11px; }
+.site-footer__context { display:flex; align-items:center; gap:20px; min-width:0; }
+.site-footer__context > span:first-child { font-family:'Playfair Display',Georgia,serif; color:var(--brown); font-size:15px; }
+.site-footer__creator { display:flex; align-items:center; gap:7px; color:#7f7772; text-decoration:none; white-space:nowrap; opacity:.84; transition:opacity .18s ease, transform .18s ease; }
+.site-footer__creator:hover { opacity:1; transform:translateY(-1px); }
+.site-footer__creator img { width:28px; height:28px; object-fit:cover; border-radius:7px; box-shadow:0 2px 7px rgba(25,39,61,.16); }
+.site-footer__creator span { font-family:'DM Sans',system-ui,sans-serif !important; color:#7f7772 !important; font-size:10px !important; }
+.site-footer__creator strong { color:var(--brown); font-weight:800; }
+.site-footer__creator small { color:#9b9189; font-size:9px; letter-spacing:.02em; }
 
 @media (max-width: 1080px) {
   .catalog-grid { grid-template-columns:repeat(3,1fr); }
@@ -474,7 +481,9 @@ h3 { color: var(--brown); }
   .canvas-panel { overflow:auto; }
   .canvas-panel__heading, .canvas-help { min-width:620px; }
   .admin-metrics { grid-template-columns:1fr 1fr; }
-  .site-footer .shell { align-items:flex-start; flex-direction:column; justify-content:center; }
+  .site-footer .shell { align-items:flex-start; flex-direction:column; justify-content:center; padding-top:14px; padding-bottom:14px; }
+  .site-footer__context { flex-wrap:wrap; gap:6px 14px; }
+  .site-footer__creator { margin-top:2px; }
 }
 
 /* ---------- Demo/prototype affordances ---------- */
