@@ -5,31 +5,30 @@ type LogoProps = {
 export default function Logo({ compact = false }: LogoProps) {
   return (
     <div className={`brand ${compact ? 'brand--compact' : ''}`} aria-label="ViviaVisions">
-      <svg className="brand__mark" viewBox="0 0 88 72" aria-hidden="true">
+      <svg className="brand__mark" viewBox="0 0 110 78" aria-hidden="true">
         <path
           className="brand__v-left"
-          d="M12 9h16l13 42L55 9h13L47 63h-9L12 9Z"
+          d="M14 10h18l16 48L65 10h15L54 69H42L14 10Z"
         />
         <path
           className="brand__v-right"
-          d="M39 9h11l15 39L82 9"
+          d="M46 10h12l18 41 20-41"
         />
         <path
           className="brand__flourish"
-          d="M18 44c9-9 17-16 26-21 10-6 21-10 31-11 6-1 9 2 8 6-2 6-9 11-16 15-8 4-17 7-26 10-11 3-20 5-26 4-5-1-4-6 3-10Z"
+          d="M10 44c16-12 30-21 44-27 13-6 27-10 42-12 10-1 15 1 16 5 1 5-4 9-14 12-12 4-26 8-39 14-14 6-27 13-39 24"
         />
         <path
           className="brand__flourish-tail"
-          d="M47 31c6-8 11-14 15-21"
+          d="M58 28c10-10 18-19 24-28"
         />
         <path
-          className="brand__leaf"
-          d="M61 24c6-1 10-5 13-10-6 0-11 3-13 10Zm6-9c-2-5-1-9 3-13 3 5 2 10-3 13Z"
+          className="brand__stem"
+          d="M80 18c9 6 16 13 23 20"
         />
-        <path
-          className="brand__leaf brand__leaf--small"
-          d="M69 20c5 0 9-3 12-8-5 0-9 2-12 8Z"
-        />
+        <path className="brand__leaf-outline" d="M80 20c-1-8 2-15 9-20 3 9 0 16-9 20Z" />
+        <path className="brand__leaf-outline" d="M87 26c8-1 15 1 21 7-8 4-15 3-21-7Z" />
+        <path className="brand__leaf-outline" d="M75 31c-8 0-14 3-19 10 9 2 16-1 19-10Z" />
       </svg>
       {!compact && (
         <div className="brand__words">

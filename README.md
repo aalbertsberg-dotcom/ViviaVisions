@@ -1,4 +1,4 @@
-# ViviaVisions v1.7.2
+# ViviaVisions v1.7.3
 
 **Every detail. Every option. Every vision.**
 
@@ -92,7 +92,7 @@ git push
 - Refined VV monogram and favicon
 - Venue-specific branding remains venue-owned
 
-## v1.7.2 brand refinement
+## v1.7.3 brand refinement
 - Updated the ViviaVisions logo to a more elegant navy-and-gold monogram with a softer flourish and leaf detail.
 - Refined the favicon to match the updated VV mark.
 - Tightened the main brand presentation so the header feels closer to the inspiration art direction.
