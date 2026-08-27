@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import Logo from './Logo'
 import type { VenueProfile, WeddingWorkspace } from '../types'
+import { PLATFORM_NAME, PLATFORM_NAME_UPPER, PLATFORM_SHORT_NAME, POWERED_BY_PLATFORM } from '../config/platform'
 
 export type PageKey = 'home' | 'venues' | 'for-venues' | 'signin' | 'venue' | 'catalog' | 'wedding' | 'planner' | 'media' | 'ai-preview' | 'messages' | 'calendar' | 'summary' | 'admin' | 'platform'
 
@@ -27,7 +28,7 @@ type HeaderProps = {
 type NavItem = { key: PageKey; label: string; description?: string }
 
 function VenueBrand({ venue, onClick, onPoweredClick, subtitle }: { venue: VenueProfile; onClick: () => void; onPoweredClick: () => void; subtitle: string }) {
-  const poweredText = 'Powered by ViviaVisions'
+  const poweredText = POWERED_BY_PLATFORM
   const hasPoweredLink = subtitle.includes(poweredText)
   const subtitlePrefix = hasPoweredLink ? subtitle.replace(poweredText, '').replace(/\s*·\s*$/, '').trim() : subtitle
 
@@ -66,7 +67,7 @@ export default function Header({
 
   const publicNav: NavItem[] = isVenuePublicPage ? [
     { key: 'venue', label: 'Venue Home' },
-    { key: 'home', label: 'ViviaVisions' },
+    { key: 'home', label: PLATFORM_NAME },
     { key: 'signin', label: 'Sign In' },
   ] : [
     { key: 'home', label: 'Home' },
@@ -112,11 +113,11 @@ export default function Header({
     <>
       <header className={`site-header app-header app-header--${mode}${isVenuePublicPage ? ' app-header--venue-public' : ''}`} style={{ '--venue-primary': activeVenue.brandPrimary, '--venue-accent': activeVenue.brandAccent } as CSSProperties}>
         <div className="app-header__brand">
-          {mode === 'public' && !isVenuePublicPage && <button className="brand-button" onClick={() => go('home')} aria-label="ViviaVisions home"><Logo /></button>}
-          {isVenuePublicPage && <VenueBrand venue={activeVenue} onClick={() => go('venue')} onPoweredClick={() => go('home')} subtitle="Powered by ViviaVisions" />}
-          {mode === 'platform' && <button className="platform-brand" type="button" onClick={() => go('platform')}><Logo compact /><span><strong>ViviaVisions Admin</strong><small>Proof of Concept</small></span></button>}
-          {mode === 'owner' && <VenueBrand venue={activeVenue} onClick={() => go('admin')} onPoweredClick={() => go('home')} subtitle="Owner Portal · Powered by ViviaVisions" />}
-          {mode === 'couple' && <VenueBrand venue={activeVenue} onClick={() => go('wedding')} onPoweredClick={() => go('home')} subtitle={`${eventLabel[0].toUpperCase() + eventLabel.slice(1)} Portal · Powered by ViviaVisions`} />}
+          {mode === 'public' && !isVenuePublicPage && <button className="brand-button" onClick={() => go('home')} aria-label={`${PLATFORM_NAME} home`}><Logo /></button>}
+          {isVenuePublicPage && <VenueBrand venue={activeVenue} onClick={() => go('venue')} onPoweredClick={() => go('home')} subtitle={POWERED_BY_PLATFORM} />}
+          {mode === 'platform' && <button className="platform-brand" type="button" onClick={() => go('platform')}><Logo compact /><span><strong>{PLATFORM_NAME} Admin</strong><small>Proof of Concept</small></span></button>}
+          {mode === 'owner' && <VenueBrand venue={activeVenue} onClick={() => go('admin')} onPoweredClick={() => go('home')} subtitle={`Owner Portal · ${POWERED_BY_PLATFORM}`} />}
+          {mode === 'couple' && <VenueBrand venue={activeVenue} onClick={() => go('wedding')} onPoweredClick={() => go('home')} subtitle={`${eventLabel[0].toUpperCase() + eventLabel.slice(1)} Portal · ${POWERED_BY_PLATFORM}`} />}
         </div>
 
         <nav className="app-header__desktop-nav" aria-label="Primary navigation">
@@ -137,7 +138,7 @@ export default function Header({
 
       {menuOpen && <button className="nav-menu-backdrop" aria-label="Close menu" onClick={() => setMenuOpen(false)} />}
       <aside className={menuOpen ? 'clean-drawer clean-drawer--open' : 'clean-drawer'} aria-label="Application menu">
-        <div className="clean-drawer__heading"><div><span className="mini-label">{mode === 'owner' || mode === 'couple' ? activeVenue.shortName.toUpperCase() : 'VIVIAVISIONS'}</span><strong>{mode === 'owner' ? 'Owner Portal' : mode === 'couple' ? activeWeddingName : mode === 'platform' ? 'Admin · Proof of Concept' : 'ViviaVisions'}</strong></div><button type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button></div>
+        <div className="clean-drawer__heading"><div><span className="mini-label">{mode === 'owner' || mode === 'couple' ? activeVenue.shortName.toUpperCase() : PLATFORM_NAME_UPPER}</span><strong>{mode === 'owner' ? 'Owner Portal' : mode === 'couple' ? activeWeddingName : mode === 'platform' ? 'Admin · Proof of Concept' : PLATFORM_NAME}</strong></div><button type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button></div>
 
         {mode === 'owner' && <div className="clean-drawer__switcher"><label htmlFor="drawer-active-wedding">Active {eventLabel}</label><select id="drawer-active-wedding" value={activeWeddingId} onChange={(event) => onSelectWedding(event.target.value)}>{sortedWeddings.map((wedding) => <option value={wedding.id} key={wedding.id}>{wedding.profile.couple} · {wedding.profile.date}</option>)}</select><small>All {eventLabel}-specific tools follow this selection inside {activeVenue.shortName}.</small></div>}
 
@@ -145,7 +146,7 @@ export default function Header({
 
         <div className="clean-drawer__footer">
           {mode === 'owner' && <button onClick={() => { setMenuOpen(false); onOwnerLogout() }}>Sign out of {activeVenue.shortName}</button>}
-          {mode === 'platform' && <button onClick={() => { setMenuOpen(false); onPlatformLogout() }}>Sign out of VV Admin POC</button>}
+          {mode === 'platform' && <button onClick={() => { setMenuOpen(false); onPlatformLogout() }}>Sign out of {PLATFORM_SHORT_NAME} Admin POC</button>}
           {mode === 'public' && <button onClick={() => go('signin')}>Sign in</button>}
           {(mode === 'owner' || mode === 'platform') && <button className="clean-drawer__reset" onClick={() => { setMenuOpen(false); onResetPreview() }}>{mode === 'owner' && activeVenue.id === 'venue-chandelier-oaks' ? 'Reset local workspace data' : 'Reset preview data'}</button>}
         </div>

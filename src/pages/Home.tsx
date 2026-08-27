@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import type { PageKey } from '../components/Header'
 import Logo from '../components/Logo'
 import type { VenueConfig } from '../types'
+import { PLATFORM_NAME, PLATFORM_NAME_UPPER, PLATFORM_TAGLINE } from '../config/platform'
 
 export default function Home({ onNavigate, onOpenVenue, venues }: {
   onNavigate: (page: PageKey) => void
@@ -12,10 +13,10 @@ export default function Home({ onNavigate, onOpenVenue, venues }: {
     <main className="saas-home">
       <section className="saas-hero shell">
         <div className="saas-hero__copy">
-          <span className="saas-pill">VIVIAVISIONS · EVENT VENUE MANAGEMENT &amp; PLANNING</span>
+          <span className="saas-pill">{PLATFORM_NAME_UPPER} · EVENT VENUE MANAGEMENT &amp; PLANNING</span>
           <h1>One platform. Every venue still feels like itself.</h1>
-          <p className="vivia-tagline">Every detail. Every option. Every vision.</p>
-          <p>ViviaVisions gives event venues a branded system for inventory, spaces, packages, clients, communication and final setup — while every event gets a private workspace inside the venue where it is booked.</p>
+          <p className="vivia-tagline">{PLATFORM_TAGLINE}</p>
+          <p>{PLATFORM_NAME} gives event venues a branded system for inventory, spaces, packages, clients, communication and final setup — while every event gets a private workspace inside the venue where it is booked.</p>
           <div className="hero__actions">
             <button className="button button--primary" onClick={() => onNavigate('venues')}>Explore Venues</button>
             <button className="button button--ghost" onClick={() => onNavigate('for-venues')}>For Venues</button>
@@ -25,7 +26,7 @@ export default function Home({ onNavigate, onOpenVenue, venues }: {
 
         <div className="saas-hero__visual">
           <div className="multi-venue-stack">
-            <div className="platform-stack__top"><Logo compact /><div><span>VIVIAVISIONS</span><strong>Venue Portals</strong></div></div>
+            <div className="platform-stack__top"><Logo compact /><div><span>{PLATFORM_NAME_UPPER}</span><strong>Venue Portals</strong></div></div>
             <p>Choose a venue to explore its branded owner and client experience.</p>
             <div className="multi-venue-stack__cards">
               {venues.map((config) => (
@@ -41,12 +42,12 @@ export default function Home({ onNavigate, onOpenVenue, venues }: {
                 </button>
               ))}
             </div>
-            <button className="multi-venue-stack__next" onClick={() => onNavigate('for-venues')}><span>+</span><div><small>YOUR VENUE</small><strong>See ViviaVisions for your property</strong><em>Your logo · colors · spaces · inventory · clients</em></div><b>›</b></button>
+            <button className="multi-venue-stack__next" onClick={() => onNavigate('for-venues')}><span>+</span><div><small>YOUR VENUE</small><strong>See {PLATFORM_NAME} for your property</strong><em>Your logo · colors · spaces · inventory · clients</em></div><b>›</b></button>
           </div>
         </div>
       </section>
 
-      <section className="saas-proof-section shell" aria-label="ViviaVisions platform highlights">
+      <section className="saas-proof-section shell" aria-label={`${PLATFORM_NAME} platform highlights`}>
         <div className="saas-proof-row">
           <div><strong>Venue-owned workflow</strong><span>Inventory, packages, spaces and events</span></div>
           <div><strong>Venue-based client portals</strong><span>Each event lives inside its booked venue</span></div>
@@ -76,8 +77,8 @@ export default function Home({ onNavigate, onOpenVenue, venues }: {
       </section>
 
       <section className="cta-section shell saas-cta">
-        <div><p className="eyebrow">FOR VENUES</p><h2>Build the portal around your property.</h2><p>Tell us about your branding, website, spaces, inventory, packages and workflow. ViviaVisions can configure a venue experience around the way you already operate.</p></div>
-        <button className="button button--light" onClick={() => onNavigate('for-venues')}>See ViviaVisions for Your Venue</button>
+        <div><p className="eyebrow">FOR VENUES</p><h2>Build the portal around your property.</h2><p>Tell us about your branding, website, spaces, inventory, packages and workflow. {PLATFORM_NAME} can configure a venue experience around the way you already operate.</p></div>
+        <button className="button button--light" onClick={() => onNavigate('for-venues')}>See {PLATFORM_NAME} for Your Venue</button>
       </section>
     </main>
   )

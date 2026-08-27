@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import DecorVisual from '../components/DecorVisual'
 import { itemAllowedForTier, tierLabel, venueConfigById } from '../data'
 import type { Category, PackageTier, Selection } from '../types'
+import { PLATFORM_NAME } from '../config/platform'
 
 const categories: Array<'All' | Category> = ['All', 'Furniture', 'Arches', 'Backdrops', 'Lighting', 'Florals', 'Linens', 'Centerpieces', 'Signs', 'Specialty', 'Ceremony', 'Miscellaneous']
 
@@ -50,7 +51,7 @@ export default function Catalog({ venueId, selections, onSetQuantity, canEdit, o
         <div>
           <p className="eyebrow">{venue.shortName.toUpperCase()} · {inventoryName.toUpperCase()}</p>
           <h1>Browse the venue's resources before setup day.</h1>
-          <p>{venue.id === 'venue-chandelier-oaks' ? 'Chandelier Oaks publicly describes its Pinrose Prop Shop as including antique furniture, arches, arbors, French doors, champagne walls, swing beds, chandeliers and more. ViviaVisions turns that collection into a searchable planning library.' : venue.id === 'venue-foundry-rivergate' ? 'The Foundry uses an Event Resource Library to show how furniture, AV, staging, lighting and operational resources can live in the same planning workflow.' : 'Juniper & Stone uses a modern Design Library to show how a completely different inventory style and brand can use the same ViviaVisions tools.'}</p>
+          <p>{venue.id === 'venue-chandelier-oaks' ? `Chandelier Oaks publicly describes its Pinrose Prop Shop as including antique furniture, arches, arbors, French doors, champagne walls, swing beds, chandeliers and more. ${PLATFORM_NAME} turns that collection into a searchable planning library.` : venue.id === 'venue-foundry-rivergate' ? 'The Foundry uses an Event Resource Library to show how furniture, AV, staging, lighting and operational resources can live in the same planning workflow.' : `Juniper & Stone uses a modern Design Library to show how a completely different inventory style and brand can use the same ${PLATFORM_NAME} tools.`}</p>
           <div className="sample-data-note"><strong>{venue.isSample ? 'Showcase inventory' : 'Initial venue catalog'}</strong><span>{venue.isSample ? 'This venue and its inventory are fictional examples created to show multi-venue customization.' : 'Pinrose Prop Shop item types are configured from Chandelier Oaks public information. Working quantities, dimensions, storage locations and exact package access should be finalized during the venue inventory pass.'}</span></div>
           {!canEdit && <div className="catalog-access-note"><strong>{isChandelier ? 'Public catalog view.' : 'Public browsing preview.'}</strong><span>Enter an {eventLabel} workspace to make selections.</span><button className="text-link" onClick={onRequireAccess}>{eventLabel[0].toUpperCase() + eventLabel.slice(1)} access →</button></div>}
         </div>

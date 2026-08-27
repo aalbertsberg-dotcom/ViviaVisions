@@ -1,4 +1,4 @@
-name: Deploy ViviaVisions to GitHub Pages
+name: Deploy platform to GitHub Pages
 
 on:
   push:

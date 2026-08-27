@@ -16,6 +16,7 @@ import Calendar from './pages/Calendar'
 import SetupSheet from './pages/SetupSheet'
 import Admin from './pages/Admin'
 import PlatformAdmin from './pages/PlatformAdmin'
+import { PLATFORM_NAME, POWERED_BY_PLATFORM, platformConfig } from './config/platform'
 import CoupleAccess from './pages/CoupleAccess'
 import { chandelierOaks, foundryRivergate, itemAllowedForTier, juniperStone, packageById, venueConfigById, venueConfigBySlug, venueConfigs } from './data'
 import type { MessageContext, MessageRole, PlacedItem, VenueLead, WeddingMessage, WeddingProfile, WeddingStatus, WeddingWorkspace } from './types'
@@ -296,14 +297,14 @@ export default function App() {
         <div className="shell">
           <div className="site-footer__context">
             {ownerAuthenticated || coupleAuthenticatedWeddingId === activeWedding?.id || page === 'venue'
-              ? <><span>{activeVenue.profile.shortName}</span><span>Powered by ViviaVisions</span></>
+              ? <><span>{activeVenue.profile.shortName}</span><span>{POWERED_BY_PLATFORM}</span></>
               : platformAuthenticated
-                ? <><span>ViviaVisions Admin</span><span>Internal proof of concept · {venueConfigs.length} venue profiles</span></>
-                : <><span>ViviaVisions</span><span>Event venue management & planning · venue-first private client workspaces</span></>}
+                ? <><span>{PLATFORM_NAME} Admin</span><span>Internal proof of concept · {venueConfigs.length} venue profiles</span></>
+                : <><span>{PLATFORM_NAME}</span><span>Event venue management & planning · venue-first private client workspaces</span></>}
           </div>
           <div className="site-footer__creator">
-            <img src="./a3-cube-logo.png" alt="" />
-            <span>Created by <a href="https://aalbertsberg.us/" target="_blank" rel="noopener noreferrer" aria-label="A cubed website"><strong>A³</strong></a></span>
+            <img src={platformConfig.creator.logoPath} alt="" />
+            <span>Created by <a href={platformConfig.creator.url} target="_blank" rel="noopener noreferrer" aria-label="A cubed website"><strong>{platformConfig.creator.name}</strong></a></span>
           </div>
         </div>
       </footer>

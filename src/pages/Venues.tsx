@@ -1,5 +1,6 @@
 import { useMemo, useState, type CSSProperties } from 'react'
 import type { VenueConfig, WeddingWorkspace } from '../types'
+import { PLATFORM_NAME, PLATFORM_NAME_UPPER } from '../config/platform'
 
 export default function Venues({ venues, weddings, onOpenVenue, onOpenCouple, onForVenues }: {
   venues: VenueConfig[]
@@ -14,8 +15,8 @@ export default function Venues({ venues, weddings, onOpenVenue, onOpenCouple, on
   return (
     <main className="page-main shell venue-directory-page">
       <section className="page-intro venue-directory-intro">
-        <p className="eyebrow">VIVIAVISIONS · VENUES</p>
-        <h1>See ViviaVisions in action.</h1>
+        <p className="eyebrow">{PLATFORM_NAME_UPPER} · VENUES</p>
+        <h1>See {PLATFORM_NAME} in action.</h1>
         <p>Explore how the same platform adapts to wedding venues, corporate event spaces and private-event properties. Clients always enter through the venue where their event is booked.</p>
       </section>
 
@@ -80,10 +81,10 @@ export default function Venues({ venues, weddings, onOpenVenue, onOpenCouple, on
       <section className="venue-directory-cta">
         <div>
           <p className="eyebrow">FOR VENUES</p>
-          <h2>Bring ViviaVisions to your property.</h2>
+          <h2>Bring {PLATFORM_NAME} to your property.</h2>
           <p>Your branding, spaces, inventory, packages, event types and client workflow — configured around the way your venue already operates.</p>
         </div>
-        <button className="button button--primary" onClick={() => onForVenues?.()}>See ViviaVisions for Your Venue</button>
+        <button className="button button--primary" onClick={() => onForVenues?.()}>See {PLATFORM_NAME} for Your Venue</button>
       </section>
     </main>
   )

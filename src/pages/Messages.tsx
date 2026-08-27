@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
 import { venueConfigById } from '../data'
 import type { InventoryItem, MessageAttachment, MessageContext, MessageRole, PlacedItem, Selection, WeddingMessage, WeddingProfile } from '../types'
+import { PLATFORM_NAME } from '../config/platform'
 
 type MessagesProps = {
   venueId: string
@@ -102,12 +103,12 @@ export default function Messages({ venueId, profile, selections, placedItems, me
     if (typeof Notification === 'undefined') { window.alert('This browser does not support browser notifications.'); return }
     const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
     if (permission === 'granted') setNotificationsEnabled(true)
-    else window.alert('Notification permission was not granted. Messages will still show an unread badge in ViviaVisions.')
+    else window.alert(`Notification permission was not granted. Messages will still show an unread badge in ${PLATFORM_NAME}.`)
   }
 
   const notify = (body: string) => {
     if (!notificationsEnabled || typeof Notification === 'undefined' || Notification.permission !== 'granted') return
-    new Notification(`${venue.shortName} · ViviaVisions message`, { body })
+    new Notification(`${venue.shortName} · ${PLATFORM_NAME} message`, { body })
   }
 
   const simulateReply = () => {

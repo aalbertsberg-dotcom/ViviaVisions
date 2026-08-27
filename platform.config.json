@@ -1,0 +1,14 @@
+{
+  "name": "ViviaVisions",
+  "shortName": "VV",
+  "legalName": "ViviaVisions LLC",
+  "wordmarkPrimary": "Vivia",
+  "wordmarkAccent": "Visions",
+  "tagline": "Every detail. Every option. Every vision.",
+  "description": "Event venue management and planning with branded venue portals, private client workspaces, inventory, layouts, messaging and owner tools.",
+  "creator": {
+    "name": "A³",
+    "url": "https://aalbertsberg.us/",
+    "logoPath": "./a3-cube-logo.png"
+  }
+}

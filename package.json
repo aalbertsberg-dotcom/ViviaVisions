@@ -1,22 +1,26 @@
 {
   "name": "viviavisions",
   "private": true,
-  "version": "1.7.5",
+  "version": "1.8.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.app.json",
+    "check": "npm run typecheck && npm run build"
   },
   "dependencies": {
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "@supabase/supabase-js": "^2.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.0.5",
     "typescript": "^7.0.2",
-    "vite": "^8.2.1"
+    "vite": "^8.2.1",
+    "@types/node": "^22.0.0"
   }
 }

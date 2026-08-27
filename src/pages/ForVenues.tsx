@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { VenueLead } from '../types'
+import { PLATFORM_NAME, PLATFORM_NAME_UPPER, POWERED_BY_PLATFORM } from '../config/platform'
 
 type ForVenuesProps = {
   leads: VenueLead[]
@@ -67,7 +68,7 @@ export default function ForVenues({ leads, setLeads, onBackHome, onViewVenueDemo
             <article><span>Event spaces</span><strong>{submitted.eventSpaces}</strong><small>{submitted.weddingsPerMonth} events/month</small></article>
             <article><span>Inventory</span><strong>{submitted.inventorySize}</strong><small>{submitted.packages}</small></article>
           </div>
-          <div className="hero__actions"><button className="button button--primary" onClick={onViewVenueDemo}>Explore Venues</button><button className="button button--ghost" onClick={onBackHome}>Back to ViviaVisions</button><button className="text-link" onClick={() => setSubmittedId(null)}>Start another request</button></div>
+          <div className="hero__actions"><button className="button button--primary" onClick={onViewVenueDemo}>Explore Venues</button><button className="button button--ghost" onClick={onBackHome}>Back to {PLATFORM_NAME}</button><button className="text-link" onClick={() => setSubmittedId(null)}>Start another request</button></div>
         </section>
       </main>
     )
@@ -76,7 +77,7 @@ export default function ForVenues({ leads, setLeads, onBackHome, onViewVenueDemo
   return (
     <main className="page-main shell for-venues-page">
       <section className="page-intro page-intro--split venue-onboarding-intro">
-        <div><p className="eyebrow">VIVIAVISIONS · FOR VENUES</p><h1>See what ViviaVisions could look like for your venue.</h1><p>Tell us about the property, brand, inventory and workflow. The form builds a live preview and shows the information ViviaVisions would use to configure a venue-branded experience.</p></div>
+        <div><p className="eyebrow">{PLATFORM_NAME_UPPER} · FOR VENUES</p><h1>See what {PLATFORM_NAME} could look like for your venue.</h1><p>Tell us about the property, brand, inventory and workflow. The form builds a live preview and shows the information {PLATFORM_NAME} would use to configure a venue-branded experience.</p></div>
         <div className="onboarding-steps"><span><b>1</b>Venue details</span><span><b>2</b>Brand + inventory</span><span><b>3</b>Configure portal</span><span><b>4</b>Invite clients</span></div>
       </section>
 
@@ -125,12 +126,12 @@ export default function ForVenues({ leads, setLeads, onBackHome, onViewVenueDemo
             <div className="portal-preview__chrome"><span/><span/><span/></div>
             <div className="portal-preview__header">
               <div className="portal-preview__logo">{form.logoDataUrl ? <img src={form.logoDataUrl} alt="" /> : initials}</div>
-              <div><strong>{form.venueName || 'Your Venue'}</strong><span>Powered by ViviaVisions</span></div>
+              <div><strong>{form.venueName || 'Your Venue'}</strong><span>{POWERED_BY_PLATFORM}</span></div>
             </div>
             <div className="portal-preview__hero"><span>YOUR EVENT PORTAL</span><strong>Everything for your event, in one place.</strong><button type="button">Open my event</button></div>
             <div className="portal-preview__tiles"><i/><i/><i/></div>
           </div>
-          <div className="panel onboarding-includes"><p className="mini-label">A VIVIAVISIONS EXPERIENCE CAN INCLUDE</p><ul><li>Venue-branded customer portal</li><li>Owner/admin access</li><li>Separate client workspaces</li><li>Inventory and package rules</li><li>Venue design areas</li><li>Messaging and setup summaries</li></ul></div>
+          <div className="panel onboarding-includes"><p className="mini-label">A {PLATFORM_NAME_UPPER} EXPERIENCE CAN INCLUDE</p><ul><li>Venue-branded customer portal</li><li>Owner/admin access</li><li>Separate client workspaces</li><li>Inventory and package rules</li><li>Venue design areas</li><li>Messaging and setup summaries</li></ul></div>
         </aside>
       </div>
     </main>

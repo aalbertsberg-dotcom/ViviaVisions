@@ -3,6 +3,7 @@ import type { PageKey } from '../components/Header'
 import { areaById, venueConfigById } from '../data'
 import { listMediaAssets, saveMediaAsset } from '../mediaStore'
 import type { MediaAssetRecord, PlacedItem, Selection } from '../types'
+import { PLATFORM_NAME } from '../config/platform'
 
 type AiPreviewProps = {
   venueId: string
@@ -97,7 +98,7 @@ export default function AiPreview({ venueId, weddingId, weddingName, preferredAr
       ctx.fillStyle = 'rgba(28,34,30,.78)'; ctx.fillRect(0, 575, width, 145)
       ctx.fillStyle = '#fff'; ctx.font = '600 34px Georgia'; ctx.fillText(`${weddingName} · ${area.name}`, 52, 625)
       ctx.font = '16px Arial'; ctx.fillStyle = '#eee8df'; ctx.fillText(`${style} · ${time} · ${view}`, 52, 655)
-      ctx.font = '13px Arial'; ctx.fillStyle = '#d8d0c7'; const note = notes.trim().slice(0, 115) || 'ViviaVisions AI preview concept'; ctx.fillText(note, 52, 683)
+      ctx.font = '13px Arial'; ctx.fillStyle = '#d8d0c7'; const note = notes.trim().slice(0, 115) || `${PLATFORM_NAME} AI preview concept`; ctx.fillText(note, 52, 683)
       ctx.textAlign = 'right'; ctx.fillStyle = '#f0d9b7'; ctx.font = '700 13px Arial'; ctx.fillText('AI PREVIEW DEMO · PRODUCTION USES GENERATIVE RENDERING', 1148, 683); ctx.textAlign = 'left'
 
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', .9))

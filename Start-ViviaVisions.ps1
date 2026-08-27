@@ -1,3 +1,6 @@
+$config = Get-Content (Join-Path $PSScriptRoot 'platform.config.json') -Raw | ConvertFrom-Json
+$appName = $config.name
+
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
@@ -8,10 +11,10 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
 }
 
 if (-not (Test-Path (Join-Path $PSScriptRoot 'node_modules'))) {
-    Write-Host 'Installing ViviaVisions dependencies...' -ForegroundColor Cyan
+    Write-Host "Installing $appName dependencies..." -ForegroundColor Cyan
     npm install
 }
 
-Write-Host 'Starting ViviaVisions...' -ForegroundColor Green
+Write-Host "Starting $appName..." -ForegroundColor Green
 Write-Host 'Press Ctrl+C to stop the local site.' -ForegroundColor DarkGray
 npm run dev

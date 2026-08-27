@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { VenueConfig } from '../types'
+import { PLATFORM_NAME, PLATFORM_NAME_UPPER } from '../config/platform'
 
 type SignInProps = {
   venues: VenueConfig[]
@@ -19,7 +20,7 @@ export default function SignIn({ venues, activeVenueId, onSelectVenue, onVenueOw
   return (
     <main className="page-main shell signin-page">
       <section className="signin-intro">
-        <p className="eyebrow">VIVIAVISIONS · SIGN IN</p>
+        <p className="eyebrow">{PLATFORM_NAME_UPPER} · SIGN IN</p>
         <h1>Find your venue first.</h1>
         <p>Venue-team and client access always belongs to a venue. Choose the venue, then enter the workspace assigned to you.</p>
       </section>
@@ -35,7 +36,7 @@ export default function SignIn({ venues, activeVenueId, onSelectVenue, onVenueOw
       </div>
 
       <section className="signin-production-note"><strong>Access model</strong><span>The current build uses temporary access codes. Production launch will use secure venue-team accounts and email-based client invitations or one-time codes while preserving the venue-first path.</span></section>
-      <button className="text-link signin-back" onClick={onBackHome}>← Back to ViviaVisions</button>
+      <button className="text-link signin-back" onClick={onBackHome}>← Back to {PLATFORM_NAME}</button>
     </main>
   )
 }

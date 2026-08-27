@@ -1,109 +1,87 @@
-# ViviaVisions v1.7.3
+# ViviaVisions v1.8.0
 
 **Every detail. Every option. Every vision.**
 
-## v1.7 rebrand
+## v1.8.0 — production backend foundation
 
-- Rebranded the public platform, venue attribution, sign-in, admin POC, setup sheets, notifications, metadata and footer from Venue Visions to **ViviaVisions**.
-- Updated the main wordmark to **ViviaVisions** while preserving the established VV mark.
-- Added the new brand line to the homepage: **Every detail. Every option. Every vision.**
-- Venue sites now use **Powered by ViviaVisions**.
+This version starts the transition from a browser demo to a real multi-tenant SaaS platform without removing the working demo data yet.
 
-Chandelier Oaks is now presented as the first configured venue implementation rather than a generic demo. Public venue facts, package structure, booking rules, couple portals and an initial Pinrose Prop Shop catalog are integrated into the venue-branded experience. Temporary access codes and local browser data remain only as current-build plumbing until production authentication/storage are added.
+### Name-independent platform configuration
+The platform identity now lives in `platform.config.json`:
 
-# ViviaVisions v1.6.1
+- platform name
+- legal name
+- wordmark pieces
+- tagline
+- site description
+- A³ creator link/logo
 
-ViviaVisions is now presented as a broader **event venue management & planning SaaS**, not wedding-only software.
+Most product-facing branding now reads from that configuration so a future rename no longer requires a site-wide text rewrite.
 
-## Public ViviaVisions
-- Home
-- Venues
-- For Venues
-- Sign In
-- Public language uses events, clients and venue resources while each venue can use its own terminology.
+### Supabase foundation
+Added:
 
-## Configured venues
+- `@supabase/supabase-js`
+- `.env.example`
+- reusable Supabase browser client
+- auth repository scaffold
+- venue/event repository scaffold
+- backend status detection
+- initial PostgreSQL migration
+- Row Level Security tenant isolation
+- private `venue-assets` storage bucket/policies
 
-### Chandelier Oaks
-- Wedding venue · Kiln, Mississippi
-- Owner preview code: `123456`
-- Sarah & John — `111111`
-- Ashley & Mark — `222222`
-- Jennifer & Matt — `333333`
-- Public Chandelier Oaks details remain integrated; unconfirmed operational values remain illustrative.
+### Initial production schema
+The migration creates:
 
-### Juniper & Stone Estate
-- Fictional wedding venue · Asheville, North Carolina
-- Owner preview code: `246810`
-- Olivia & James — `444444`
-- Maya & Theo — `555555`
-- Navy/copper branding, separate packages, spaces and Design Library.
+- profiles
+- venues
+- venue memberships
+- clients
+- packages
+- spaces
+- inventory
+- events
+- selections
+- layouts + layout items
+- messages + read state
+- media assets
+- invitations
 
-### The Foundry at Rivergate
-- Fictional multi-purpose event venue · Louisville, Kentucky
-- Owner preview code: `975310`
-- Northstar Health Leadership Summit — `666666`
-- River City Foundation Gala — `777777`
-- Charcoal/teal branding with corporate-event packages, spaces, AV/staging inventory and client terminology.
+Every tenant-owned record is protected through a venue or event relationship. Chandelier Oaks will be the first real tenant migrated after the Supabase project is connected.
 
-## Platform behavior
-- Homepage Venue Portals panel now contains three venue choices plus **See ViviaVisions for your property**.
-- Venue data remains isolated by venue.
-- Wedding venues can use **wedding/couple** terminology.
-- Multi-purpose venues can use **event/client** terminology.
-- Client access stays under the venue URL.
-- 2D layout remains the planning source of truth; AI Preview follows the structured 2D plan.
-- Internal ViviaVisions Admin remains a proof of concept at `#/platform` with code `654321`.
+See `BACKEND-SETUP.md` for the next steps.
 
-## Browser-preview limitations
-Authentication gates, uploads, messages and saved state are browser-local preview behavior. Production still needs secure backend authentication, tenant authorization, cloud storage, database persistence, notifications, AI calls and billing.
+## Current demo access
+Temporary browser-only access codes remain in place while real authentication is built:
+
+- ViviaVisions Admin POC: `654321`
+- Chandelier Oaks owner: `123456`
+- Sarah & John: `111111`
+- Ashley & Mark: `222222`
+- Jennifer & Matt: `333333`
+
+The demo codes will be removed when the Supabase Auth screens are connected.
 
 ## Run locally
+
 ```powershell
-cd C:\Users\aalbe\Documents\Dev\VenueVisions
+cd C:\Users\aalbe\Documents\Dev\ViviaVisions
 npm install
 npm run dev
 ```
 
-## Publish update
+## Validate
+
+```powershell
+npm run check
+```
+
+## Publish
+
 ```powershell
 npm run build
 git add .
-git commit -m "Broaden ViviaVisions for event venues and add third venue"
+git commit -m "Start ViviaVisions production backend"
 git push
 ```
-
-
-## v1.6.3
-- Chandelier Oaks public venue experience is now venue-first with smaller tenant branding and subtle ViviaVisions attribution.
-- Chandelier Oaks wedding package pricing matches the current public package page: $2,500 / $4,800 / $7,200 / $10,000 / $12,000.
-
-
-## v1.6.4
-- Removed duplicate Chandelier Oaks branding from the venue hero.
-- Removed the duplicate Powered by ViviaVisions hero pill and configured-portal status copy.
-- Chandelier Oaks hero now starts with “Plan your event at Chandelier Oaks.”
-- “Powered by ViviaVisions” in venue headers links back to the ViviaVisions home page.
-
-
-## v1.7.1 brand polish
-- Single-word ViviaVisions wordmark
-- Navy, gold and champagne platform palette
-- Refined VV monogram and favicon
-- Venue-specific branding remains venue-owned
-
-## v1.7.3 brand refinement
-- Updated the ViviaVisions logo to a more elegant navy-and-gold monogram with a softer flourish and leaf detail.
-- Refined the favicon to match the updated VV mark.
-- Tightened the main brand presentation so the header feels closer to the inspiration art direction.
-
-
-## v1.7.4 creator credit
-- Added a subtle global footer credit linking to https://aalbertsberg.us/.
-- Uses the A³ blue cube logo supplied by the site creator.
-- Appears across ViviaVisions and venue-branded pages without competing with venue branding.
-
-
-## v1.7.5 footer refinement
-- Removed the visible aalbertsberg.us text from the creator credit.
-- Only A³ is the link to https://aalbertsberg.us/.

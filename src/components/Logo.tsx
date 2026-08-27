@@ -1,10 +1,12 @@
+import { platformConfig, PLATFORM_NAME, PLATFORM_TAGLINE } from '../config/platform'
+
 type LogoProps = {
   compact?: boolean
 }
 
 export default function Logo({ compact = false }: LogoProps) {
   return (
-    <div className={`brand ${compact ? 'brand--compact' : ''}`} aria-label="ViviaVisions">
+    <div className={`brand ${compact ? 'brand--compact' : ''}`} aria-label={PLATFORM_NAME}>
       <svg className="brand__mark" viewBox="0 0 110 78" aria-hidden="true">
         <path
           className="brand__v-left"
@@ -32,11 +34,11 @@ export default function Logo({ compact = false }: LogoProps) {
       </svg>
       {!compact && (
         <div className="brand__words">
-          <span className="brand__wordmark" aria-label="ViviaVisions">
-            <span className="brand__wordmark-primary">Vivia</span>
-            <span className="brand__wordmark-accent">Visions</span>
+          <span className="brand__wordmark" aria-label={PLATFORM_NAME}>
+            <span className="brand__wordmark-primary">{platformConfig.wordmarkPrimary}</span>
+            <span className="brand__wordmark-accent">{platformConfig.wordmarkAccent}</span>
           </span>
-          <span className="brand__submark">EVERY DETAIL. EVERY OPTION. EVERY VISION.</span>
+          <span className="brand__submark">{PLATFORM_TAGLINE.toUpperCase()}</span>
         </div>
       )}
     </div>
