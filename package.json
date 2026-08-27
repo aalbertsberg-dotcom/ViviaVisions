@@ -1,7 +1,7 @@
 {
   "name": "viviavisions",
   "private": true,
-  "version": "1.8.6",
+  "version": "1.8.7",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,4 +24,3 @@
     "@types/node": "^22.0.0"
   }
 }
-

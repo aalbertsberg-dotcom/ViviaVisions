@@ -1,4 +1,4 @@
-﻿import type { CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import Header, { type PageKey } from './components/Header'
 import Home from './pages/Home'
@@ -19,6 +19,7 @@ import PlatformAdmin from './pages/PlatformAdmin'
 import { PLATFORM_NAME, POWERED_BY_PLATFORM, platformConfig } from './config/platform'
 import { supabase } from './lib/supabase'
 import { getVenueStaffAccessBySlug, signInWithPassword, signOut as signOutSupabase } from './lib/repositories/auth'
+import { listVenueEventWorkspaces } from './lib/repositories/events'
 import { loadVenueConfigFromSupabase } from './lib/repositories/venueConfig'
 import CoupleAccess from './pages/CoupleAccess'
 import { applyVenueConfigOverride, chandelierOaks, foundryRivergate, itemAllowedForTier, juniperStone, packageById, venueConfigById, venueConfigBySlug, venueConfigs } from './data'
@@ -342,6 +343,18 @@ export default function App() {
         setOwnerAuthenticatedVenueId(null)
         return { ok: false, error: `This account does not have access to ${activeVenue.profile.shortName}.` }
       }
+
+      const databaseWeddings = await listVenueEventWorkspaces(
+        activeVenue.profile.slug,
+        activeVenueId,
+        weddings.filter((wedding) => wedding.venueId === activeVenueId),
+      )
+
+      setWeddings((current) => [
+        ...current.filter((wedding) => wedding.venueId !== activeVenueId),
+        ...databaseWeddings,
+      ])
+      if (databaseWeddings[0]) setActiveWeddingId(databaseWeddings[0].id)
 
       setOwnerAuthenticatedVenueId(activeVenueId)
       setCoupleAuthenticatedWeddingId(null)
