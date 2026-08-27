@@ -85,3 +85,10 @@ git add .
 git commit -m "Start ViviaVisions production backend"
 git push
 ```
+
+
+## v1.8.1
+- Replaced the temporary ViviaVisions platform-admin code with Supabase email/password authentication.
+- Platform admin access is verified against the `profiles.platform_role = 'admin'` authorization helper.
+- Supabase sessions now persist securely through the browser client.
+- Venue-owner and client demo-code migration will follow separately.

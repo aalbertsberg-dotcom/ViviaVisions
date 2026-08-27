@@ -17,11 +17,12 @@ import SetupSheet from './pages/SetupSheet'
 import Admin from './pages/Admin'
 import PlatformAdmin from './pages/PlatformAdmin'
 import { PLATFORM_NAME, POWERED_BY_PLATFORM, platformConfig } from './config/platform'
+import { supabase } from './lib/supabase'
+import { signInWithPassword, signOut as signOutSupabase } from './lib/repositories/auth'
 import CoupleAccess from './pages/CoupleAccess'
 import { chandelierOaks, foundryRivergate, itemAllowedForTier, juniperStone, packageById, venueConfigById, venueConfigBySlug, venueConfigs } from './data'
 import type { MessageContext, MessageRole, PlacedItem, VenueLead, WeddingMessage, WeddingProfile, WeddingStatus, WeddingWorkspace } from './types'
 
-const ADMIN_POC_CODE = '654321'
 
 const chandelierMessages: WeddingMessage[] = [
   { id: 'sample-msg-1', senderRole: 'bride', senderName: 'Sarah & John', body: 'Hi! We started looking through the Pinrose Prop Shop. Could we use the gold lanterns around the guest tables?', timestamp: '2026-08-18T14:22:00-05:00', attachments: [], context: { kind: 'inventory', id: 'gold-lantern', label: 'Gold Lantern Set' }, readByBride: true, readByVenue: true },
@@ -106,7 +107,8 @@ export default function App() {
   const [activeWeddingId, setActiveWeddingId] = useState<string>(() => readLocal('venueVisions.saas.activeWeddingId', 'wedding-sarah-john'))
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => readLocal('venueVisions.saas.notifications', false))
   const [ownerAuthenticatedVenueId, setOwnerAuthenticatedVenueId] = useState<string | null>(() => readSession('venueVisions.saas.ownerSessionVenueId', null))
-  const [platformAuthenticated, setPlatformAuthenticated] = useState<boolean>(() => readSession('venueVisions.saas.platformSession', false))
+  const [platformAuthenticated, setPlatformAuthenticated] = useState(false)
+  const [platformAuthLoading, setPlatformAuthLoading] = useState(Boolean(supabase))
   const [coupleAuthenticatedWeddingId, setCoupleAuthenticatedWeddingId] = useState<string | null>(() => readSession('venueVisions.saas.coupleSessionWeddingId', null))
   const [venueLeads, setVenueLeads] = useState<VenueLead[]>(() => readLocal('venueVisions.saas.leads.v1', []))
 
@@ -148,8 +150,45 @@ export default function App() {
   useEffect(() => localStorage.setItem('venueVisions.saas.notifications', JSON.stringify(notificationsEnabled)), [notificationsEnabled])
   useEffect(() => localStorage.setItem('venueVisions.saas.leads.v1', JSON.stringify(venueLeads)), [venueLeads])
   useEffect(() => { if (ownerAuthenticatedVenueId) sessionStorage.setItem('venueVisions.saas.ownerSessionVenueId', JSON.stringify(ownerAuthenticatedVenueId)); else sessionStorage.removeItem('venueVisions.saas.ownerSessionVenueId') }, [ownerAuthenticatedVenueId])
-  useEffect(() => sessionStorage.setItem('venueVisions.saas.platformSession', JSON.stringify(platformAuthenticated)), [platformAuthenticated])
   useEffect(() => { if (coupleAuthenticatedWeddingId) sessionStorage.setItem('venueVisions.saas.coupleSessionWeddingId', JSON.stringify(coupleAuthenticatedWeddingId)); else sessionStorage.removeItem('venueVisions.saas.coupleSessionWeddingId') }, [coupleAuthenticatedWeddingId])
+  useEffect(() => {
+    if (!supabase) {
+      setPlatformAuthenticated(false)
+      setPlatformAuthLoading(false)
+      return
+    }
+
+    let cancelled = false
+
+    const refreshPlatformAccess = async () => {
+      const { data: sessionData } = await supabase.auth.getSession()
+      if (!sessionData.session) {
+        if (!cancelled) {
+          setPlatformAuthenticated(false)
+          setPlatformAuthLoading(false)
+        }
+        return
+      }
+
+      const { data, error } = await supabase.rpc('is_platform_admin')
+      if (!cancelled) {
+        setPlatformAuthenticated(!error && data === true)
+        setPlatformAuthLoading(false)
+      }
+    }
+
+    void refreshPlatformAccess()
+
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      window.setTimeout(() => { void refreshPlatformAccess() }, 0)
+    })
+
+    return () => {
+      cancelled = true
+      listener.subscription.unsubscribe()
+    }
+  }, [])
+
 
   const updateActiveWedding = (updater: (current: WeddingWorkspace) => WeddingWorkspace) => setWeddings((current) => current.map((wedding) => wedding.id === activeWedding?.id ? updater(wedding) : wedding))
 
@@ -248,11 +287,29 @@ export default function App() {
     setWeddings((current) => [...current, newWedding]); setActiveWeddingId(id); return null
   }
 
-  const authenticateOwner = (code: string) => { if (code.trim() !== activeVenue.ownerAccessCode) return false; setOwnerAuthenticatedVenueId(activeVenueId); setPlatformAuthenticated(false); setCoupleAuthenticatedWeddingId(null); return true }
-  const authenticatePlatform = (code: string) => { if (code.trim() !== ADMIN_POC_CODE) return false; setPlatformAuthenticated(true); setOwnerAuthenticatedVenueId(null); setCoupleAuthenticatedWeddingId(null); return true }
-  const authenticateCouple = (code: string) => { if (!activeWedding || code.trim() !== activeWedding.accessCode) return false; setCoupleAuthenticatedWeddingId(activeWedding.id); setOwnerAuthenticatedVenueId(null); setPlatformAuthenticated(false); return true }
+  const authenticateOwner = (code: string) => { if (code.trim() !== activeVenue.ownerAccessCode) return false; setOwnerAuthenticatedVenueId(activeVenueId); setCoupleAuthenticatedWeddingId(null); return true }
+  const authenticatePlatform = async (email: string, password: string): Promise<{ ok: boolean; error?: string }> => {
+    if (!supabase) return { ok: false, error: 'Supabase is not configured on this deployment.' }
+    try {
+      await signInWithPassword(email.trim(), password)
+      const { data, error } = await supabase.rpc('is_platform_admin')
+      if (error || data !== true) {
+        await signOutSupabase()
+        setPlatformAuthenticated(false)
+        return { ok: false, error: 'This account is not authorized as a ViviaVisions platform administrator.' }
+      }
+      setPlatformAuthenticated(true)
+      setOwnerAuthenticatedVenueId(null)
+      setCoupleAuthenticatedWeddingId(null)
+      return { ok: true }
+    } catch (error) {
+      setPlatformAuthenticated(false)
+      return { ok: false, error: error instanceof Error ? error.message : 'Unable to sign in.' }
+    }
+  }
+  const authenticateCouple = (code: string) => { if (!activeWedding || code.trim() !== activeWedding.accessCode) return false; setCoupleAuthenticatedWeddingId(activeWedding.id); setOwnerAuthenticatedVenueId(null); return true }
   const logoutOwner = () => { setOwnerAuthenticatedVenueId(null); sessionStorage.removeItem('venueVisions.saas.ownerSessionVenueId'); navigate('venue') }
-  const logoutPlatform = () => { setPlatformAuthenticated(false); sessionStorage.removeItem('venueVisions.saas.platformSession'); navigate('home') }
+  const logoutPlatform = async () => { try { if (supabase) await signOutSupabase() } finally { setPlatformAuthenticated(false); navigate('home') } }
   const logoutCouple = () => { setCoupleAuthenticatedWeddingId(null); navigate('venue') }
 
   const selectionCount = useMemo(() => selections.reduce((sum, item) => sum + item.quantity, 0), [selections])
@@ -291,7 +348,7 @@ export default function App() {
       {!showCoupleGate && !showCalendarGate && page === 'summary' && activeWedding && <SetupSheet venueId={activeVenueId} wedding={activeWedding} />}
       {!showCoupleGate && !showCalendarGate && page === 'calendar' && ownerAuthenticated && <Calendar venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} />}
       {page === 'admin' && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={ownerAuthenticated} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} />}
-      {page === 'platform' && <PlatformAdmin authenticated={platformAuthenticated} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={weddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} />}
+      {page === 'platform' && <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={weddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} />}
 
       <footer className="site-footer saas-footer">
         <div className="shell">

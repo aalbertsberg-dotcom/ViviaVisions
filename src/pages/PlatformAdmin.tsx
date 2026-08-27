@@ -4,7 +4,6 @@ import type { VenueConfig, VenueLead, WeddingWorkspace } from '../types'
 import { PLATFORM_NAME, PLATFORM_NAME_UPPER, PLATFORM_SHORT_NAME } from '../config/platform'
 import { backendStatus } from '../lib/backend'
 
-const ADMIN_POC_CODE = '654321'
 const companyModules = [
   { id: 'venues', title: 'Venue accounts', copy: `Create, configure, suspend and review each venue using ${PLATFORM_NAME}.`, defaultOn: true },
   { id: 'sales', title: 'Preview requests + sales', copy: 'Track venue inquiries, requested walkthroughs, follow-ups and onboarding status.', defaultOn: true },
@@ -16,8 +15,9 @@ const companyModules = [
 
 type PlatformAdminProps = {
   authenticated: boolean
-  onAuthenticate: (code: string) => boolean
-  onLogout: () => void
+  authLoading: boolean
+  onAuthenticate: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>
+  onLogout: () => void | Promise<void>
   onNavigate: (page: PageKey) => void
   leads: VenueLead[]
   weddings: WeddingWorkspace[]
@@ -25,8 +25,10 @@ type PlatformAdminProps = {
   onOpenVenue: (slug: string) => void
 }
 
-export default function PlatformAdmin({ authenticated, onAuthenticate, onLogout, onNavigate, leads, weddings, venues, onOpenVenue }: PlatformAdminProps) {
-  const [code, setCode] = useState(ADMIN_POC_CODE)
+export default function PlatformAdmin({ authenticated, authLoading, onAuthenticate, onLogout, onNavigate, leads, weddings, venues, onOpenVenue }: PlatformAdminProps) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [moduleChoices, setModuleChoices] = useState<Record<string, boolean>>(() => {
     try { const saved = localStorage.getItem('venueVisions.poc.adminModules'); if (saved) return JSON.parse(saved) as Record<string, boolean> } catch { /* POC */ }
@@ -43,10 +45,27 @@ export default function PlatformAdmin({ authenticated, onAuthenticate, onLogout,
 
   if (!authenticated) return (
     <main className="owner-access-page shell"><section className="panel owner-access-card platform-access-card">
-      <div className="owner-access-lock">{PLATFORM_SHORT_NAME}</div><p className="eyebrow">{PLATFORM_NAME_UPPER} ADMIN · PROOF OF CONCEPT</p><h1>Shape the company side of {PLATFORM_NAME}.</h1>
-      <p className="owner-access-lead">This internal proof of concept is for reviewing what {PLATFORM_NAME} should need as a company: venue accounts, preview requests, onboarding, support, billing and platform settings. Venue customers would never see this area.</p>
-      <form className="owner-access-form" onSubmit={(event) => { event.preventDefault(); if (!onAuthenticate(code)) setError('Incorrect proof-of-concept code.'); else setError('') }}><label htmlFor="admin-poc-code">Temporary POC code</label><input id="admin-poc-code" value={code} onChange={(event) => { setCode(event.target.value); setError('') }} /><small>Prefilled for review: <strong>{ADMIN_POC_CODE}</strong></small>{error && <div className="owner-access-error">{error}</div>}<button className="button button--primary full-width" type="submit">Enter {PLATFORM_SHORT_NAME} Admin POC</button></form>
-      <div className="owner-access-note"><strong>Proof of concept only.</strong> Nothing here represents a finalized company workflow, pricing model, security design or billing system.</div>
+      <div className="owner-access-lock">{PLATFORM_SHORT_NAME}</div><p className="eyebrow">{PLATFORM_NAME_UPPER} ADMIN</p><h1>Sign in to the company side of {PLATFORM_NAME}.</h1>
+      <p className="owner-access-lead">Platform administration now uses the real Supabase account and role assigned to you. Venue customers never see this area.</p>
+      {authLoading ? <div className="owner-access-note"><strong>Checking your session…</strong></div> : (
+        <form className="owner-access-form" onSubmit={async (event) => {
+          event.preventDefault()
+          setSubmitting(true)
+          setError('')
+          const result = await onAuthenticate(email, password)
+          if (!result.ok) setError(result.error ?? 'Unable to sign in.')
+          setSubmitting(false)
+        }}>
+          <label htmlFor="platform-admin-email">Email</label>
+          <input id="platform-admin-email" type="email" autoComplete="username" value={email} onChange={(event) => { setEmail(event.target.value); setError('') }} required />
+          <label htmlFor="platform-admin-password">Password</label>
+          <input id="platform-admin-password" type="password" autoComplete="current-password" value={password} onChange={(event) => { setPassword(event.target.value); setError('') }} required />
+          <small>Only accounts with the ViviaVisions platform-admin role can enter.</small>
+          {error && <div className="owner-access-error">{error}</div>}
+          <button className="button button--primary full-width" type="submit" disabled={submitting}>{submitting ? 'Signing in…' : `Sign in to ${PLATFORM_SHORT_NAME} Admin`}</button>
+        </form>
+      )}
+      <div className="owner-access-note"><strong>Real authentication is active.</strong> The admin workspace itself is still being built out from the proof of concept.</div>
     </section></main>
   )
 
