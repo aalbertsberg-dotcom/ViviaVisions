@@ -11,7 +11,7 @@ type AdminProps = {
   activeWeddingId: string
   onSelectWedding: (id: string) => void
   onOpenWedding: (id: string, destination?: PageKey) => void
-  onAddWedding: (input: { couple: string; date: string; guests: number; packageId: string; primaryEmail: string }) => string | null
+  onAddWedding: (input: { couple: string; date: string; guests: number; packageId: string; primaryEmail: string }) => string | null | Promise<string | null>
   authenticated: boolean
   authLoading: boolean
   onAuthenticate: (emailOrCode: string, password?: string) => Promise<{ ok: boolean; error?: string }>
@@ -99,9 +99,9 @@ export default function Admin({ venueId, weddings, activeWeddingId, onSelectWedd
     )
   }
 
-  const submitWedding = (event: FormEvent) => {
+  const submitWedding = async (event: FormEvent) => {
     event.preventDefault()
-    const result = onAddWedding({ couple, date, guests, packageId, primaryEmail })
+    const result = await onAddWedding({ couple, date, guests, packageId, primaryEmail })
     if (result) { setFormError(result); return }
     setShowAdd(false); setCouple(''); setDate(''); setGuests(100); setPackageId(packages[0]?.id ?? ''); setPrimaryEmail(''); setFormError('')
   }

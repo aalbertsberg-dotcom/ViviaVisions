@@ -45,7 +45,7 @@ export default function Wedding({ venueId, profile, selections, unreadMessages, 
     </section>
 
     <div className="wedding-content-grid">
-      <section className="panel wedding-details-panel"><div className="panel__heading"><div><p className="eyebrow">{eventLabel.toUpperCase()} DETAILS</p><h2>Plan the {isWedding?'day':'event'}</h2><p>{isChandelier ? 'Changes save automatically in the current workspace.' : 'Changes save automatically in this browser preview.'}</p></div></div><div className="form-grid two-col wedding-detail-fields">
+      <section className="panel wedding-details-panel"><div className="panel__heading"><div><p className="eyebrow">{eventLabel.toUpperCase()} DETAILS</p><h2>Plan the {isWedding?'day':'event'}</h2><p>{isChandelier && ownerMode ? 'Owner changes save automatically to the venue database.' : isChandelier ? 'Changes remain in this browser until client authentication is connected.' : 'Changes save automatically in this browser preview.'}</p></div></div><div className="form-grid two-col wedding-detail-fields">
         <label><span>{isWedding?'Couple':'Event / client name'}</span><input value={profile.couple} onChange={(e)=>patch('couple',e.target.value)} /></label>
         <label><span>{eventLabel[0].toUpperCase()+eventLabel.slice(1)} date</span><input type="date" value={profile.date} onChange={(e)=>patch('date',e.target.value)} /></label>
         <label><span>Guest count</span><input type="number" min="1" max="500" value={profile.guests} onChange={(e)=>patch('guests',Number(e.target.value)||1)} /></label>

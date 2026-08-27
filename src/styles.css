@@ -1324,8 +1324,21 @@ h3 { color: var(--brown); }
 .owner-active-wedding__buttons { display:flex; gap:8px; flex-wrap:wrap; }
 
 .admin-weddings__heading { align-items:flex-start!important; }
-.workspace-actions--three { display:grid; grid-template-columns:1.25fr .85fr 1fr; gap:8px; }
-.workspace-actions--three .button { justify-content:center; white-space:nowrap; }
+.workspace-actions--three {
+  display:grid;
+  grid-template-columns:minmax(0,1.25fr) minmax(0,.85fr) minmax(0,1fr);
+  gap:8px;
+  width:100%;
+}
+.workspace-actions--three .button {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-width:0;
+  padding-inline:10px;
+  white-space:nowrap;
+}
 .couple-access-details {
   margin-top:15px;
   padding:14px;

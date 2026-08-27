@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Header, { type PageKey } from './components/Header'
 import Home from './pages/Home'
 import Venues from './pages/Venues'
@@ -19,7 +19,7 @@ import PlatformAdmin from './pages/PlatformAdmin'
 import { PLATFORM_NAME, POWERED_BY_PLATFORM, platformConfig } from './config/platform'
 import { supabase } from './lib/supabase'
 import { getVenueStaffAccessBySlug, signInWithPassword, signOut as signOutSupabase } from './lib/repositories/auth'
-import { listVenueEventWorkspaces } from './lib/repositories/events'
+import { createVenueEventWorkspace, listVenueEventWorkspaces, saveEventLayoutItems, saveEventMessages, saveEventProfile, setEventSelection } from './lib/repositories/events'
 import { loadVenueConfigFromSupabase } from './lib/repositories/venueConfig'
 import CoupleAccess from './pages/CoupleAccess'
 import { applyVenueConfigOverride, chandelierOaks, foundryRivergate, itemAllowedForTier, juniperStone, packageById, venueConfigById, venueConfigBySlug, venueConfigs } from './data'
@@ -62,7 +62,7 @@ const foundryPlan: PlacedItem[] = [
 
 const previewWeddings: WeddingWorkspace[] = [
   { id: 'wedding-sarah-john', venueId: chandelierOaks.id, accessSlug: 'sarah-john', accessCode: '111111', status: 'Designing', paymentStepsCompleted: 2, profile: { couple: 'Sarah & John', date: '2026-10-17', guests: 125, packageId: 'weekend', ceremonyArea: 'under-the-oaks', receptionArea: 'pecan-pavilion', primaryEmail: 'sarah@example.com', partnerEmail: 'john@example.com', contractSigned: true, reservationPaid: true, notes: 'Use warm lanterns and greenery on guest tables. Keep the pavilion entrance simple and leave plenty of dance-floor space.' }, selections: [{ itemId: 'gold-lantern', quantity: 12 }, { itemId: 'french-doors', quantity: 1 }, { itemId: 'green-wall', quantity: 1 }], placedItems: chandelierPlan, messages: chandelierMessages },
-  { id: 'wedding-ashley-mark', venueId: chandelierOaks.id, accessSlug: 'ashley-mark', accessCode: '222222', status: 'Designing', paymentStepsCompleted: 1, profile: { couple: 'Ashley & Mark', date: '2026-10-24', guests: 58, packageId: 'classic', ceremonyArea: 'hilltop-gazebo', receptionArea: 'pecan-pavilion', primaryEmail: 'ashley@example.com', partnerEmail: 'mark@example.com', contractSigned: true, reservationPaid: true, notes: 'Simple ceremony at the gazebo and a traditional reception in the pavilion.' }, selections: [{ itemId: 'gold-lantern', quantity: 8 }, { itemId: 'welcome-easel', quantity: 1 }], placedItems: [{ id: 'ashley-table-1', type: 'round-table', x: 175, y: 145, rotation: 0, scale: 1, label: 'Round table', areaId: 'pecan-pavilion' }, { id: 'ashley-table-2', type: 'round-table', x: 355, y: 145, rotation: 0, scale: 1, label: 'Round table', areaId: 'pecan-pavilion' }, { id: 'ashley-dance', type: 'dance-floor', x: 520, y: 220, rotation: 0, scale: .9, label: 'Dance floor', areaId: 'pecan-pavilion' }], messages: [{ id: 'ashley-msg-1', senderRole: 'bride', senderName: 'Ashley & Mark', body: 'Can we keep the gazebo ceremony very simple and move most of the dÃ©cor to the pavilion?', timestamp: '2026-08-19T16:10:00-05:00', attachments: [], context: { kind: 'area', id: 'hilltop-gazebo', label: 'Hilltop Gazebo' }, readByBride: true, readByVenue: false }] },
+  { id: 'wedding-ashley-mark', venueId: chandelierOaks.id, accessSlug: 'ashley-mark', accessCode: '222222', status: 'Designing', paymentStepsCompleted: 1, profile: { couple: 'Ashley & Mark', date: '2026-10-24', guests: 58, packageId: 'classic', ceremonyArea: 'hilltop-gazebo', receptionArea: 'pecan-pavilion', primaryEmail: 'ashley@example.com', partnerEmail: 'mark@example.com', contractSigned: true, reservationPaid: true, notes: 'Simple ceremony at the gazebo and a traditional reception in the pavilion.' }, selections: [{ itemId: 'gold-lantern', quantity: 8 }, { itemId: 'welcome-easel', quantity: 1 }], placedItems: [{ id: 'ashley-table-1', type: 'round-table', x: 175, y: 145, rotation: 0, scale: 1, label: 'Round table', areaId: 'pecan-pavilion' }, { id: 'ashley-table-2', type: 'round-table', x: 355, y: 145, rotation: 0, scale: 1, label: 'Round table', areaId: 'pecan-pavilion' }, { id: 'ashley-dance', type: 'dance-floor', x: 520, y: 220, rotation: 0, scale: .9, label: 'Dance floor', areaId: 'pecan-pavilion' }], messages: [{ id: 'ashley-msg-1', senderRole: 'bride', senderName: 'Ashley & Mark', body: 'Can we keep the gazebo ceremony very simple and move most of the décor to the pavilion?', timestamp: '2026-08-19T16:10:00-05:00', attachments: [], context: { kind: 'area', id: 'hilltop-gazebo', label: 'Hilltop Gazebo' }, readByBride: true, readByVenue: false }] },
   { id: 'wedding-jennifer-matt', venueId: chandelierOaks.id, accessSlug: 'jennifer-matt', accessCode: '333333', status: 'Not started', paymentStepsCompleted: 1, profile: { couple: 'Jennifer & Matt', date: '2026-11-07', guests: 210, packageId: 'luxury', ceremonyArea: 'under-the-oaks', receptionArea: 'pecan-pavilion', primaryEmail: 'jennifer@example.com', partnerEmail: 'matt@example.com', contractSigned: true, reservationPaid: true, notes: '' }, selections: [], placedItems: [], messages: [] },
   { id: 'wedding-olivia-james', venueId: juniperStone.id, accessSlug: 'olivia-james', accessCode: '444444', status: 'Designing', paymentStepsCompleted: 2, profile: { couple: 'Olivia & James', date: '2026-09-12', guests: 132, packageId: 'js-signature', ceremonyArea: 'stone-courtyard', receptionArea: 'glass-hall', primaryEmail: 'olivia@example.com', partnerEmail: 'james@example.com', contractSigned: true, reservationPaid: true, notes: 'Long banquet tables, warm copper accents and a clean ceremony frame.' }, selections: [{ itemId: 'js-smoked-vases', quantity: 20 }, { itemId: 'js-copper-stands', quantity: 8 }, { itemId: 'js-oak-arch', quantity: 1 }], placedItems: juniperPlan, messages: [{ id: 'juniper-msg-1', senderRole: 'bride', senderName: 'Olivia & James', body: 'Can we keep the Glass Hall tables long and clean, with the copper stands only on every other table?', timestamp: '2026-08-20T11:15:00-05:00', attachments: [], context: { kind: 'area', id: 'glass-hall', label: 'Glass Hall' }, readByBride: true, readByVenue: false }] },
   { id: 'wedding-maya-theo', venueId: juniperStone.id, accessSlug: 'maya-theo', accessCode: '555555', status: 'Ready', paymentStepsCompleted: 3, profile: { couple: 'Maya & Theo', date: '2026-11-21', guests: 76, packageId: 'js-essential', ceremonyArea: 'orchard-lawn', receptionArea: 'glass-hall', primaryEmail: 'maya@example.com', partnerEmail: 'theo@example.com', contractSigned: true, reservationPaid: true, notes: 'Simple orchard ceremony with mostly candlelight and bud vases inside.' }, selections: [{ itemId: 'js-smoked-vases', quantity: 28 }, { itemId: 'js-hurricanes', quantity: 24 }], placedItems: [], messages: [] },
@@ -115,6 +115,8 @@ export default function App() {
   const [coupleAuthenticatedWeddingId, setCoupleAuthenticatedWeddingId] = useState<string | null>(() => readSession('venueVisions.saas.coupleSessionWeddingId', null))
   const [venueLeads, setVenueLeads] = useState<VenueLead[]>(() => readLocal('venueVisions.saas.leads.v1', []))
   const [, setVenueConfigRevision] = useState(0)
+  const profileSaveTimerRef = useRef<number | null>(null)
+  const layoutSaveTimerRef = useRef<number | null>(null)
 
   const activeVenue = venueConfigById(activeVenueId)
   const venueWeddings = useMemo(() => weddings.filter((wedding) => wedding.venueId === activeVenueId), [weddings, activeVenueId])
@@ -125,6 +127,7 @@ export default function App() {
   const messages = activeWedding?.messages ?? []
   const packageInfo = profile ? packageById(profile.packageId, activeVenueId) : activeVenue.packages[0]
   const ownerAuthenticated = ownerAuthenticatedVenueId === activeVenueId
+  const databaseOwnerSession = ownerAuthenticated && activeVenue.profile.slug === 'chandelier-oaks'
   const hasWorkspaceAccess = Boolean(activeWedding && (ownerAuthenticated || coupleAuthenticatedWeddingId === activeWedding.id))
 
   useEffect(() => {
@@ -234,8 +237,15 @@ export default function App() {
       if (role === 'venue' && !message.readByVenue) return { ...message, readByVenue: true }
       return message
     })
-    if (nextMessages.some((message, index) => message !== activeWedding.messages[index])) updateActiveWedding((wedding) => ({ ...wedding, messages: nextMessages }))
-  }, [page, ownerAuthenticated, activeWedding?.id, hasWorkspaceAccess])
+    if (nextMessages.some((message, index) => message !== activeWedding.messages[index])) {
+      updateActiveWedding((wedding) => ({ ...wedding, messages: nextMessages }))
+      if (databaseOwnerSession) {
+        void saveEventMessages(activeWedding.id, nextMessages).catch((error) => {
+          console.error('Unable to save message read state to Supabase.', error)
+        })
+      }
+    }
+  }, [page, ownerAuthenticated, activeWedding?.id, hasWorkspaceAccess, databaseOwnerSession])
 
   const routeFor = (next: PageKey) => {
     if (next === 'home') return '#/'
@@ -280,15 +290,29 @@ export default function App() {
   const openMessageContext = (context: MessageContext) => { if (context.kind === 'inventory') { localStorage.setItem('venueVisions.catalogFocus', context.id); navigate('catalog') } else { localStorage.setItem('venueVisions.plannerArea', context.id); navigate('planner') } }
 
   const setQuantity = (itemId: string, requested: number) => {
-    if (!hasWorkspaceAccess) { navigate('wedding'); return }
+    if (!hasWorkspaceAccess || !activeWedding) { navigate('wedding'); return }
     const item = activeVenue.inventory.find((entry) => entry.id === itemId)
     if (!item || !itemAllowedForTier(item, packageInfo.tier)) return
     const quantity = Math.max(0, Math.min(requested, item.quantity))
-    updateActiveWedding((wedding) => {
-      const current = wedding.selections
-      const next = quantity === 0 ? current.filter((entry) => entry.itemId !== itemId) : current.some((entry) => entry.itemId === itemId) ? current.map((entry) => entry.itemId === itemId ? { ...entry, quantity } : entry) : [...current, { itemId, quantity }]
-      return { ...wedding, selections: next, status: next.length ? 'Designing' : wedding.status }
-    })
+    const current = activeWedding.selections
+    const nextSelections = quantity === 0
+      ? current.filter((entry) => entry.itemId !== itemId)
+      : current.some((entry) => entry.itemId === itemId)
+        ? current.map((entry) => entry.itemId === itemId ? { ...entry, quantity } : entry)
+        : [...current, { itemId, quantity }]
+
+    updateActiveWedding((wedding) => ({
+      ...wedding,
+      selections: nextSelections,
+      status: nextSelections.length ? 'Designing' : wedding.status,
+    }))
+
+    if (databaseOwnerSession) {
+      void setEventSelection(activeWedding.id, itemId, quantity).catch((error) => {
+        console.error('Unable to save the resource selection to Supabase.', error)
+        window.alert('The selection changed on screen, but it could not be saved to the database. Please refresh and try again.')
+      })
+    }
   }
 
   const updateProfile = (next: WeddingProfile) => {
@@ -298,26 +322,146 @@ export default function App() {
       window.alert(`${next.date} is already booked for ${conflict?.profile.couple} at ${activeVenue.profile.shortName}. Choose another date.`); return
     }
     const nextPackage = packageById(next.packageId, activeVenueId)
-    if (nextPackage.maxGuests !== null && next.guests > nextPackage.maxGuests) { window.alert(`${nextPackage.name} is configured for a maximum of ${nextPackage.maxGuests} guests.`); return }
+    if (nextPackage.maxGuests !== null && next.guests > nextPackage.maxGuests) {
+      window.alert(`${nextPackage.name} is configured for a maximum of ${nextPackage.maxGuests} guests.`); return
+    }
+
     updateActiveWedding((wedding) => ({ ...wedding, profile: next }))
+
+    if (databaseOwnerSession) {
+      if (profileSaveTimerRef.current !== null) window.clearTimeout(profileSaveTimerRef.current)
+      const eventId = activeWedding.id
+      profileSaveTimerRef.current = window.setTimeout(() => {
+        void saveEventProfile(eventId, next).catch((error) => {
+          console.error('Unable to save event details to Supabase.', error)
+          window.alert('Those event details could not be saved to the database. Please refresh the owner portal and try again.')
+        })
+      }, 500)
+    }
   }
 
-  const setPlacedItems = (next: PlacedItem[] | ((current: PlacedItem[]) => PlacedItem[])) => { if (!hasWorkspaceAccess) return; updateActiveWedding((wedding) => ({ ...wedding, placedItems: typeof next === 'function' ? next(wedding.placedItems) : next, status: 'Designing' })) }
-  const setMessages = (next: WeddingMessage[] | ((current: WeddingMessage[]) => WeddingMessage[])) => { if (!hasWorkspaceAccess) return; updateActiveWedding((wedding) => ({ ...wedding, messages: typeof next === 'function' ? next(wedding.messages) : next })) }
+  const setPlacedItems = (next: PlacedItem[] | ((current: PlacedItem[]) => PlacedItem[])) => {
+    if (!hasWorkspaceAccess || !activeWedding) return
+    const nextItems = typeof next === 'function' ? next(activeWedding.placedItems) : next
+
+    updateActiveWedding((wedding) => ({
+      ...wedding,
+      placedItems: nextItems,
+      status: 'Designing',
+    }))
+
+    if (databaseOwnerSession) {
+      if (layoutSaveTimerRef.current !== null) window.clearTimeout(layoutSaveTimerRef.current)
+      const eventId = activeWedding.id
+      layoutSaveTimerRef.current = window.setTimeout(() => {
+        void saveEventLayoutItems(eventId, nextItems).catch((error) => {
+          console.error('Unable to save the layout to Supabase.', error)
+          window.alert('The layout changed on screen, but it could not be saved to the database. Please refresh and try again.')
+        })
+      }, 650)
+    }
+  }
+
+  const setMessages = (next: WeddingMessage[] | ((current: WeddingMessage[]) => WeddingMessage[])) => {
+    if (!hasWorkspaceAccess || !activeWedding) return
+    const nextMessages = typeof next === 'function' ? next(activeWedding.messages) : next
+
+    updateActiveWedding((wedding) => ({ ...wedding, messages: nextMessages }))
+
+    if (databaseOwnerSession) {
+      void saveEventMessages(activeWedding.id, nextMessages).catch((error) => {
+        console.error('Unable to save messages to Supabase.', error)
+        window.alert('The message changed on screen, but it could not be saved to the database. Please refresh and try again.')
+      })
+    }
+  }
+
   const selectActiveWedding = (id: string) => { if (venueWeddings.some((wedding) => wedding.id === id)) setActiveWeddingId(id) }
   const openWedding = (id: string, destination: PageKey = 'wedding') => { const wedding = weddings.find((entry) => entry.id === id); if (!wedding) return; setActiveVenueId(wedding.venueId); setActiveWeddingId(id); const venue = venueConfigById(wedding.venueId); const hash = destination === 'admin' ? `#/venue/${venue.profile.slug}/owner` : `#/venue/${venue.profile.slug}/${destination}`; window.location.hash = hash; setPage(destination); setRequestedCoupleSlug(null); window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
-  const addWedding = (input: { couple: string; date: string; guests: number; packageId: string; primaryEmail: string }): string | null => {
+  const addWedding = async (input: { couple: string; date: string; guests: number; packageId: string; primaryEmail: string }): Promise<string | null> => {
     const eventLabel = activeVenue.profile.eventLabel ?? 'event'
     const clientLabel = activeVenue.profile.clientLabel ?? 'client'
-    const cleanCouple = input.couple.trim(); if (!cleanCouple) return `Enter the ${clientLabel} or ${eventLabel} name.`; if (!input.date) return `Choose an ${eventLabel} date.`
-    const conflict = venueWeddings.find((wedding) => wedding.profile.date === input.date); if (conflict) return `${input.date} is already booked for ${conflict.profile.couple} at ${activeVenue.profile.shortName}.`
-    const pkg = packageById(input.packageId, activeVenueId); if (pkg.maxGuests !== null && input.guests > pkg.maxGuests) return `${pkg.name} is configured for a maximum of ${pkg.maxGuests} guests.`
-    const id = `${eventLabel}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`; const baseSlug = slugify(cleanCouple); let accessSlug = baseSlug; let suffix = 2; while (venueWeddings.some((wedding) => wedding.accessSlug === accessSlug)) accessSlug = `${baseSlug}-${suffix++}`
-    const secondary = activeVenue.areas.find((area) => area.kind === 'Ceremony')?.id ?? activeVenue.areas.find((area) => area.kind === 'Hospitality')?.id ?? ''
-    const primary = activeVenue.areas.find((area) => area.kind === 'Reception')?.id ?? activeVenue.areas[0]?.id ?? ''
-    const newWedding: WeddingWorkspace = { id, venueId: activeVenueId, accessSlug, accessCode: String(Math.floor(100000 + Math.random() * 900000)), status: 'Not started' as WeddingStatus, paymentStepsCompleted: 1, profile: { couple: cleanCouple, date: input.date, guests: Math.max(1, input.guests || 1), packageId: input.packageId, ceremonyArea: secondary, receptionArea: primary, primaryEmail: input.primaryEmail.trim(), partnerEmail: '', contractSigned: true, reservationPaid: true, notes: '' }, selections: [], placedItems: [], messages: [] }
-    setWeddings((current) => [...current, newWedding]); setActiveWeddingId(id); return null
+    const cleanCouple = input.couple.trim()
+    if (!cleanCouple) return `Enter the ${clientLabel} or ${eventLabel} name.`
+    if (!input.date) return `Choose an ${eventLabel} date.`
+
+    const conflict = venueWeddings.find((wedding) => wedding.profile.date === input.date)
+    if (conflict) return `${input.date} is already booked for ${conflict.profile.couple} at ${activeVenue.profile.shortName}.`
+
+    const pkg = packageById(input.packageId, activeVenueId)
+    if (pkg.maxGuests !== null && input.guests > pkg.maxGuests) {
+      return `${pkg.name} is configured for a maximum of ${pkg.maxGuests} guests.`
+    }
+
+    const secondary = activeVenue.areas.find((area) => area.kind === 'Ceremony')?.id
+      ?? activeVenue.areas.find((area) => area.kind === 'Hospitality')?.id
+      ?? ''
+    const primary = activeVenue.areas.find((area) => area.kind === 'Reception')?.id
+      ?? activeVenue.areas[0]?.id
+      ?? ''
+
+    if (databaseOwnerSession) {
+      try {
+        const newWedding = await createVenueEventWorkspace(
+          activeVenue.profile.slug,
+          activeVenueId,
+          {
+            couple: cleanCouple,
+            date: input.date,
+            guests: input.guests,
+            packageId: input.packageId,
+            primaryEmail: input.primaryEmail,
+            ceremonyArea: secondary,
+            receptionArea: primary,
+          },
+        )
+
+        setWeddings((current) => [...current, newWedding])
+        setActiveWeddingId(newWedding.id)
+        return null
+      } catch (error) {
+        console.error('Unable to create the Chandelier Oaks event in Supabase.', error)
+        return error instanceof Error ? error.message : 'Unable to create the event in the database.'
+      }
+    }
+
+    const id = `${eventLabel}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+    const baseSlug = slugify(cleanCouple)
+    let accessSlug = baseSlug
+    let suffix = 2
+    while (venueWeddings.some((wedding) => wedding.accessSlug === accessSlug)) {
+      accessSlug = `${baseSlug}-${suffix++}`
+    }
+
+    const newWedding: WeddingWorkspace = {
+      id,
+      venueId: activeVenueId,
+      accessSlug,
+      accessCode: String(Math.floor(100000 + Math.random() * 900000)),
+      status: 'Not started' as WeddingStatus,
+      paymentStepsCompleted: 1,
+      profile: {
+        couple: cleanCouple,
+        date: input.date,
+        guests: Math.max(1, input.guests || 1),
+        packageId: input.packageId,
+        ceremonyArea: secondary,
+        receptionArea: primary,
+        primaryEmail: input.primaryEmail.trim(),
+        partnerEmail: '',
+        contractSigned: true,
+        reservationPaid: true,
+        notes: '',
+      },
+      selections: [],
+      placedItems: [],
+      messages: [],
+    }
+
+    setWeddings((current) => [...current, newWedding])
+    setActiveWeddingId(id)
+    return null
   }
 
   const authenticateOwner = async (emailOrCode: string, password?: string): Promise<{ ok: boolean; error?: string }> => {
@@ -432,8 +576,8 @@ export default function App() {
             {ownerAuthenticated || coupleAuthenticatedWeddingId === activeWedding?.id || page === 'venue'
               ? <><span>{activeVenue.profile.shortName}</span><span>{POWERED_BY_PLATFORM}</span></>
               : platformAuthenticated
-                ? <><span>{PLATFORM_NAME} Admin</span><span>Internal proof of concept Â· {venueConfigs.length} venue profiles</span></>
-                : <><span>{PLATFORM_NAME}</span><span>Event venue management & planning Â· venue-first private client workspaces</span></>}
+                ? <><span>{PLATFORM_NAME} Admin</span><span>Internal proof of concept · {venueConfigs.length} venue profiles</span></>
+                : <><span>{PLATFORM_NAME}</span><span>Event venue management & planning · venue-first private client workspaces</span></>}
           </div>
           <div className="site-footer__creator">
             <img src={platformConfig.creator.logoPath} alt="" />
