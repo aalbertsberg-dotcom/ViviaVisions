@@ -1,4 +1,4 @@
-﻿import type { InventoryItem, PackageTier, VenueArea, VenueConfig, VenuePackage, VenueProfile } from './types'
+import type { InventoryItem, PackageTier, VenueArea, VenueConfig, VenuePackage, VenueProfile } from './types'
 
 export const chandelierOaks: VenueProfile = {
   id: 'venue-chandelier-oaks',
@@ -43,7 +43,7 @@ export const chandelierPackages: VenuePackage[] = [
     maxGuests: null,
     tier: 1,
     description: 'A four-hour elopement or micro-wedding experience for a smaller, relaxed celebration beneath the oaks or by the water.',
-    highlights: ['Outdoor ceremony options', 'Patio cake cutting', 'Full outdoor property photo access', 'Pinrose dÃ©cor access â€” tier dependent'],
+    highlights: ['Outdoor ceremony options', 'Patio cake cutting', 'Full outdoor property photo access', 'Pinrose décor access — tier dependent'],
   },
   {
     id: 'classic',
@@ -59,7 +59,7 @@ export const chandelierPackages: VenuePackage[] = [
     id: 'overnight',
     name: 'An Overnight Event',
     price: 7200,
-    duration: '11 AM â€“ 8 AM',
+    duration: '11 AM – 8 AM',
     maxGuests: 100,
     tier: 2,
     description: 'An 11 AM-to-8 AM celebration with overnight accommodations, rehearsal space and additional venue access.',
@@ -69,7 +69,7 @@ export const chandelierPackages: VenuePackage[] = [
     id: 'weekend',
     name: 'Wedding Weekend Experience',
     price: 10000,
-    duration: 'Friday â€“ Sunday',
+    duration: 'Friday – Sunday',
     maxGuests: 175,
     tier: 2,
     description: 'A Friday-through-Sunday wedding weekend with time for rehearsal, celebration, overnight stays and an unhurried departure.',
@@ -79,7 +79,7 @@ export const chandelierPackages: VenuePackage[] = [
     id: 'luxury',
     name: 'Luxury Weekend Retreat',
     price: 12000,
-    duration: 'Friday â€“ Sunday',
+    duration: 'Friday – Sunday',
     maxGuests: 250,
     tier: 3,
     description: 'The premium full-weekend Chandelier Oaks experience with the broadest property, rental and service access.',
@@ -150,13 +150,13 @@ export const chandelierInventory: InventoryItem[] = [
     category: 'Backdrops',
     color: 'Warm white / gold',
     quantity: 1,
-    dimensions: 'Working dimensions Â· verify onsite',
-    storage: 'Pinrose Prop Shop Â· Backdrop bay',
+    dimensions: 'Working dimensions · verify onsite',
+    storage: 'Pinrose Prop Shop · Backdrop bay',
     description: 'Statement champagne display wall for cocktail hour or reception welcome moments.',
     imageStyle: 'champagne-wall',
     featured: true,
     accessTier: 2,
-    packageNote: 'Initial package mapping Â· confirm during venue onboarding.',
+    packageNote: 'Initial package mapping · confirm during venue onboarding.',
   },
   {
     id: 'french-doors',
@@ -164,13 +164,13 @@ export const chandelierInventory: InventoryItem[] = [
     category: 'Backdrops',
     color: 'Antique ivory',
     quantity: 2,
-    dimensions: 'Working dimensions Â· verify onsite',
-    storage: 'Pinrose Prop Shop Â· Wall rack A',
+    dimensions: 'Working dimensions · verify onsite',
+    storage: 'Pinrose Prop Shop · Wall rack A',
     description: 'Vintage-style French doors for ceremony entrances, portraits or styled backdrops.',
     imageStyle: 'french-doors',
     featured: true,
     accessTier: 1,
-    packageNote: 'Initial package mapping Â· confirm during venue onboarding.',
+    packageNote: 'Initial package mapping · confirm during venue onboarding.',
   },
   {
     id: 'antique-sofa',
@@ -178,13 +178,13 @@ export const chandelierInventory: InventoryItem[] = [
     category: 'Furniture',
     color: 'Olive / walnut',
     quantity: 2,
-    dimensions: 'Working dimensions Â· verify onsite',
-    storage: 'Pinrose Prop Shop Â· Furniture row',
+    dimensions: 'Working dimensions · verify onsite',
+    storage: 'Pinrose Prop Shop · Furniture row',
     description: 'Vintage seating piece for lounge areas, portraits and sweetheart-table styling.',
     imageStyle: 'antique-sofa',
     featured: true,
     accessTier: 2,
-    packageNote: 'Initial package mapping Â· confirm during venue onboarding.',
+    packageNote: 'Initial package mapping · confirm during venue onboarding.',
   },
   {
     id: 'circle-arch',
@@ -192,12 +192,12 @@ export const chandelierInventory: InventoryItem[] = [
     category: 'Arches',
     color: 'Matte black',
     quantity: 1,
-    dimensions: 'Working dimensions Â· verify onsite',
-    storage: 'Pinrose Prop Shop Â· Arch rack',
+    dimensions: 'Working dimensions · verify onsite',
+    storage: 'Pinrose Prop Shop · Arch rack',
     description: 'Round ceremony arch ready for greenery, fabric or floral installation.',
     imageStyle: 'circle-arch',
     accessTier: 1,
-    packageNote: 'Initial package mapping Â· confirm during venue onboarding.',
+    packageNote: 'Initial package mapping · confirm during venue onboarding.',
   },
   {
     id: 'wood-arbor',
@@ -205,12 +205,12 @@ export const chandelierInventory: InventoryItem[] = [
     category: 'Arches',
     color: 'Natural wood',
     quantity: 1,
-    dimensions: 'Working dimensions Â· verify onsite',
-    storage: 'Pinrose Prop Shop Â· Arch rack',
+    dimensions: 'Working dimensions · verify onsite',
+    storage: 'Pinrose Prop Shop · Arch rack',
     description: 'Warm wood ceremony arbor for outdoor ceremony settings.',
     imageStyle: 'wood-arbor',
     accessTier: 1,
-    packageNote: 'Initial package mapping Â· confirm during venue onboarding.',
+    packageNote: 'Initial package mapping · confirm during venue onboarding.',
   },
   {
     id: 'swing-bed',
@@ -219,11 +219,11 @@ export const chandelierInventory: InventoryItem[] = [
     color: 'Natural / ivory',
     quantity: 1,
     dimensions: 'Installed prop',
-    storage: 'Property Â· Styled photo area',
+    storage: 'Property · Styled photo area',
     description: 'Photo-ready swing-bed setup for portraits and relaxed wedding-weekend moments.',
     imageStyle: 'swing-bed',
     accessTier: 2,
-    packageNote: 'Initial package mapping Â· confirm during venue onboarding.',
+    packageNote: 'Initial package mapping · confirm during venue onboarding.',
   },
   {
     id: 'crystal-chandelier',
@@ -232,11 +232,11 @@ export const chandelierInventory: InventoryItem[] = [
     color: 'Crystal / brass',
     quantity: 6,
     dimensions: 'Assorted',
-    storage: 'Pinrose Prop Shop Â· Lighting rack',
+    storage: 'Pinrose Prop Shop · Lighting rack',
     description: 'Decorative chandelier option for styled spaces and elevated reception moments.',
     imageStyle: 'chandelier',
     accessTier: 2,
-    packageNote: 'Initial package mapping Â· confirm during venue onboarding.',
+    packageNote: 'Initial package mapping · confirm during venue onboarding.',
   },
   {
     id: 'green-wall',
@@ -244,12 +244,12 @@ export const chandelierInventory: InventoryItem[] = [
     category: 'Backdrops',
     color: 'Green',
     quantity: 1,
-    dimensions: 'Working dimensions Â· verify onsite',
-    storage: 'Pinrose Prop Shop Â· Backdrop bay',
+    dimensions: 'Working dimensions · verify onsite',
+    storage: 'Pinrose Prop Shop · Backdrop bay',
     description: 'Styled greenery wall for portraits, photo moments or seating-chart placement.',
     imageStyle: 'green-wall',
     accessTier: 1,
-    packageNote: 'Initial package mapping Â· confirm during venue onboarding.',
+    packageNote: 'Initial package mapping · confirm during venue onboarding.',
   },
   {
     id: 'gold-lantern',
@@ -257,12 +257,12 @@ export const chandelierInventory: InventoryItem[] = [
     category: 'Centerpieces',
     color: 'Antique gold',
     quantity: 24,
-    dimensions: 'Assorted sizes Â· verify onsite',
-    storage: 'Pinrose Prop Shop Â· Shelf B3',
+    dimensions: 'Assorted sizes · verify onsite',
+    storage: 'Pinrose Prop Shop · Shelf B3',
     description: 'Warm metallic lanterns for tables, aisle styling and reception groupings. Use flameless candles only.',
     imageStyle: 'gold-lantern',
     accessTier: 1,
-    packageNote: 'Working quantity Â· confirm during venue inventory onboarding.',
+    packageNote: 'Working quantity · confirm during venue inventory onboarding.',
   },
   {
     id: 'white-florals',
@@ -271,11 +271,11 @@ export const chandelierInventory: InventoryItem[] = [
     color: 'White / green',
     quantity: 12,
     dimensions: 'Assorted arrangements',
-    storage: 'Pinrose Prop Shop Â· Floral storage',
+    storage: 'Pinrose Prop Shop · Floral storage',
     description: 'Working floral collection record for centerpieces and styled focal areas; final pieces will be confirmed during inventory onboarding.',
     imageStyle: 'white-florals',
     accessTier: 3,
-    packageNote: 'Initial luxury-package mapping Â· confirm exact floral access during onboarding.',
+    packageNote: 'Initial luxury-package mapping · confirm exact floral access during onboarding.',
   },
   {
     id: 'ivory-linens',
@@ -284,11 +284,11 @@ export const chandelierInventory: InventoryItem[] = [
     color: 'Ivory',
     quantity: 30,
     dimensions: 'Assorted table sizes',
-    storage: 'Pinrose Prop Shop Â· Linen storage',
+    storage: 'Pinrose Prop Shop · Linen storage',
     description: 'Working linen collection record for the top package tier; final counts and sizes will be confirmed during inventory onboarding.',
     imageStyle: 'ivory-linens',
     accessTier: 3,
-    packageNote: 'Initial luxury-package mapping Â· confirm exact linen access during onboarding.',
+    packageNote: 'Initial luxury-package mapping · confirm exact linen access during onboarding.',
   },
   {
     id: 'welcome-easel',
@@ -297,11 +297,11 @@ export const chandelierInventory: InventoryItem[] = [
     color: 'Antique gold',
     quantity: 3,
     dimensions: 'Floor standing',
-    storage: 'Pinrose Prop Shop Â· Sign row',
+    storage: 'Pinrose Prop Shop · Sign row',
     description: 'Decorative easel for welcome signage, seating charts or portraits.',
     imageStyle: 'welcome-easel',
     accessTier: 1,
-    packageNote: 'Working quantity Â· confirm during venue inventory onboarding.',
+    packageNote: 'Working quantity · confirm during venue inventory onboarding.',
   },
 ]
 
@@ -312,7 +312,7 @@ export const juniperStone: VenueProfile = {
   shortName: 'Juniper & Stone',
   tagline: 'Modern garden celebrations with a quiet architectural edge.',
   website: '',
-  address: 'Sample venue Â· Asheville, North Carolina',
+  address: 'Sample venue · Asheville, North Carolina',
   phone: '(555) 014-0274',
   email: 'hello@juniperstone.example',
   ownerName: 'Morgan Reed',
@@ -336,7 +336,7 @@ export const juniperStone: VenueProfile = {
 export const juniperPackages: VenuePackage[] = [
   { id: 'js-essential', name: 'Essential Celebration', price: 3900, duration: '8 hours', maxGuests: 80, tier: 1, description: 'A streamlined ceremony and reception package for intimate-to-mid-size celebrations.', highlights: ['Glass Hall reception', 'Courtyard ceremony option', 'Tables + chairs', 'Core design collection'] },
   { id: 'js-signature', name: 'Signature Estate', price: 6500, duration: '12 hours', maxGuests: 150, tier: 2, description: 'A full-day estate experience with expanded design inventory and multiple property spaces.', highlights: ['Choice of ceremony areas', 'Glass Hall + Terrace', 'Premium design collection', 'Getting-ready suites'] },
-  { id: 'js-weekend', name: 'Estate Weekend', price: 8900, duration: 'Friday â€“ Sunday', maxGuests: 200, tier: 3, description: 'A weekend-style celebration with extended access, rehearsal time and the complete design library.', highlights: ['Weekend property access', 'Rehearsal gathering', 'Full design library', 'Extended photo access'] },
+  { id: 'js-weekend', name: 'Estate Weekend', price: 8900, duration: 'Friday – Sunday', maxGuests: 200, tier: 3, description: 'A weekend-style celebration with extended access, rehearsal time and the complete design library.', highlights: ['Weekend property access', 'Rehearsal gathering', 'Full design library', 'Extended photo access'] },
 ]
 
 export const juniperAreas: VenueArea[] = [
@@ -348,14 +348,14 @@ export const juniperAreas: VenueArea[] = [
 ]
 
 export const juniperInventory: InventoryItem[] = [
-  { id: 'js-oak-arch', name: 'White Oak Ceremony Frame', category: 'Arches', color: 'White oak', quantity: 1, dimensions: '8 ft Ã— 7 ft', storage: 'Design Library Â· Bay A', description: 'Minimal wood ceremony frame for florals, fabric or standalone use.', imageStyle: 'wood-arbor', featured: true, accessTier: 1 },
-  { id: 'js-smoked-vases', name: 'Smoked Glass Bud Vase Set', category: 'Centerpieces', color: 'Smoke / clear', quantity: 40, dimensions: 'Assorted', storage: 'Design Library Â· Shelf C2', description: 'Mixed-height bud vases for modern table styling.', imageStyle: 'gold-lantern', featured: true, accessTier: 1 },
-  { id: 'js-copper-stands', name: 'Copper Floral Stands', category: 'Centerpieces', color: 'Copper', quantity: 16, dimensions: '28 in tall', storage: 'Design Library Â· Rack B', description: 'Elevated floral stands for guest tables or aisle accents.', imageStyle: 'welcome-easel', accessTier: 2 },
-  { id: 'js-lounge', name: 'Slate Lounge Collection', category: 'Furniture', color: 'Slate / oak', quantity: 3, dimensions: 'Modular sets', storage: 'Design Library Â· Furniture Bay', description: 'Modern lounge seating for cocktail hour and reception zones.', imageStyle: 'antique-sofa', featured: true, accessTier: 2 },
-  { id: 'js-ribbed-wall', name: 'Ribbed Ivory Backdrop', category: 'Backdrops', color: 'Ivory', quantity: 1, dimensions: '8 ft Ã— 10 ft', storage: 'Design Library Â· Backdrop Bay', description: 'Architectural backdrop for sweetheart table, escort display or photo area.', imageStyle: 'green-wall', accessTier: 2 },
-  { id: 'js-hurricanes', name: 'Glass Hurricane Collection', category: 'Lighting', color: 'Clear / ivory', quantity: 36, dimensions: 'Assorted', storage: 'Design Library Â· Shelf D1', description: 'Battery-candle hurricane vessels for tables and aisle styling.', imageStyle: 'chandelier', accessTier: 1 },
-  { id: 'js-linen', name: 'Stone Linen Collection', category: 'Linens', color: 'Stone / sand', quantity: 30, dimensions: 'Assorted tables', storage: 'Textile Room Â· Rack 2', description: 'Soft neutral linen collection included with the full design tier.', imageStyle: 'ivory-linens', accessTier: 3 },
-  { id: 'js-floral', name: 'Seasonal Neutral Floral Set', category: 'Florals', color: 'Ivory / sage', quantity: 14, dimensions: 'Assorted', storage: 'Design Library Â· Floral Room', description: 'Sample floral collection for previewing premium styling.', imageStyle: 'white-florals', accessTier: 3 },
+  { id: 'js-oak-arch', name: 'White Oak Ceremony Frame', category: 'Arches', color: 'White oak', quantity: 1, dimensions: '8 ft × 7 ft', storage: 'Design Library · Bay A', description: 'Minimal wood ceremony frame for florals, fabric or standalone use.', imageStyle: 'wood-arbor', featured: true, accessTier: 1 },
+  { id: 'js-smoked-vases', name: 'Smoked Glass Bud Vase Set', category: 'Centerpieces', color: 'Smoke / clear', quantity: 40, dimensions: 'Assorted', storage: 'Design Library · Shelf C2', description: 'Mixed-height bud vases for modern table styling.', imageStyle: 'gold-lantern', featured: true, accessTier: 1 },
+  { id: 'js-copper-stands', name: 'Copper Floral Stands', category: 'Centerpieces', color: 'Copper', quantity: 16, dimensions: '28 in tall', storage: 'Design Library · Rack B', description: 'Elevated floral stands for guest tables or aisle accents.', imageStyle: 'welcome-easel', accessTier: 2 },
+  { id: 'js-lounge', name: 'Slate Lounge Collection', category: 'Furniture', color: 'Slate / oak', quantity: 3, dimensions: 'Modular sets', storage: 'Design Library · Furniture Bay', description: 'Modern lounge seating for cocktail hour and reception zones.', imageStyle: 'antique-sofa', featured: true, accessTier: 2 },
+  { id: 'js-ribbed-wall', name: 'Ribbed Ivory Backdrop', category: 'Backdrops', color: 'Ivory', quantity: 1, dimensions: '8 ft × 10 ft', storage: 'Design Library · Backdrop Bay', description: 'Architectural backdrop for sweetheart table, escort display or photo area.', imageStyle: 'green-wall', accessTier: 2 },
+  { id: 'js-hurricanes', name: 'Glass Hurricane Collection', category: 'Lighting', color: 'Clear / ivory', quantity: 36, dimensions: 'Assorted', storage: 'Design Library · Shelf D1', description: 'Battery-candle hurricane vessels for tables and aisle styling.', imageStyle: 'chandelier', accessTier: 1 },
+  { id: 'js-linen', name: 'Stone Linen Collection', category: 'Linens', color: 'Stone / sand', quantity: 30, dimensions: 'Assorted tables', storage: 'Textile Room · Rack 2', description: 'Soft neutral linen collection included with the full design tier.', imageStyle: 'ivory-linens', accessTier: 3 },
+  { id: 'js-floral', name: 'Seasonal Neutral Floral Set', category: 'Florals', color: 'Ivory / sage', quantity: 14, dimensions: 'Assorted', storage: 'Design Library · Floral Room', description: 'Sample floral collection for previewing premium styling.', imageStyle: 'white-florals', accessTier: 3 },
 ]
 
 
@@ -366,7 +366,7 @@ export const foundryRivergate: VenueProfile = {
   shortName: 'The Foundry',
   tagline: 'Flexible industrial spaces for meetings, galas, launches and celebrations.',
   website: '',
-  address: 'Showcase venue Â· Louisville, Kentucky',
+  address: 'Showcase venue · Louisville, Kentucky',
   phone: '(555) 014-0418',
   email: 'events@foundryrivergate.example',
   ownerName: 'Alex Morgan',
@@ -404,14 +404,14 @@ export const foundryAreas: VenueArea[] = [
 ]
 
 export const foundryInventory: InventoryItem[] = [
-  { id: 'fr-stage', name: 'Modular Stage Risers', category: 'Specialty', color: 'Black', quantity: 12, dimensions: '4 ft Ã— 8 ft sections', storage: 'Equipment Room Â· Bay A', description: 'Configurable stage sections for keynotes, panels, awards and entertainment.', imageStyle: 'ribbed-wall', featured: true, accessTier: 2 },
-  { id: 'fr-podium', name: 'Presentation Podium', category: 'Furniture', color: 'Charcoal / oak', quantity: 2, dimensions: 'Standard lectern', storage: 'AV Room Â· Rack 1', description: 'Modern lectern for meetings, ceremonies and presentations.', imageStyle: 'welcome-easel', featured: true, accessTier: 1 },
-  { id: 'fr-cocktail', name: 'Cocktail Table Set', category: 'Furniture', color: 'Black', quantity: 30, dimensions: '30 in round', storage: 'Furniture Bay Â· Row C', description: 'Standing-height cocktail tables for networking and pre-function spaces.', imageStyle: 'antique-sofa', accessTier: 1 },
-  { id: 'fr-drape', name: 'Black Pipe & Drape', category: 'Backdrops', color: 'Black', quantity: 16, dimensions: '10 ft sections', storage: 'Equipment Room Â· Wall Rack', description: 'Flexible room division and backdrop system for exhibits, stages and service areas.', imageStyle: 'green-wall', accessTier: 1 },
-  { id: 'fr-uplights', name: 'Wireless LED Uplights', category: 'Lighting', color: 'RGB / tunable white', quantity: 36, dimensions: 'Battery fixtures', storage: 'AV Room Â· Charging Rack', description: 'Wireless architectural uplighting for brand colors, galas and evening events.', imageStyle: 'chandelier', featured: true, accessTier: 2 },
-  { id: 'fr-lounge', name: 'Modular Lounge Collection', category: 'Furniture', color: 'Slate / navy', quantity: 4, dimensions: 'Modular sets', storage: 'Furniture Bay Â· Row A', description: 'Contemporary lounge groupings for networking, VIP and sponsor areas.', imageStyle: 'antique-sofa', accessTier: 2 },
-  { id: 'fr-easels', name: 'Display Easel Set', category: 'Signs', color: 'Black', quantity: 12, dimensions: 'Floor standing', storage: 'Resource Library Â· Shelf B', description: 'Sign and display stands for agendas, sponsor boards, seating plans and wayfinding.', imageStyle: 'welcome-easel', accessTier: 1 },
-  { id: 'fr-linens', name: 'Black Linen Collection', category: 'Linens', color: 'Black', quantity: 40, dimensions: 'Assorted table sizes', storage: 'Textile Room Â· Rack 1', description: 'Neutral event linen collection for meetings, galas and private functions.', imageStyle: 'ivory-linens', accessTier: 3 },
+  { id: 'fr-stage', name: 'Modular Stage Risers', category: 'Specialty', color: 'Black', quantity: 12, dimensions: '4 ft × 8 ft sections', storage: 'Equipment Room · Bay A', description: 'Configurable stage sections for keynotes, panels, awards and entertainment.', imageStyle: 'ribbed-wall', featured: true, accessTier: 2 },
+  { id: 'fr-podium', name: 'Presentation Podium', category: 'Furniture', color: 'Charcoal / oak', quantity: 2, dimensions: 'Standard lectern', storage: 'AV Room · Rack 1', description: 'Modern lectern for meetings, ceremonies and presentations.', imageStyle: 'welcome-easel', featured: true, accessTier: 1 },
+  { id: 'fr-cocktail', name: 'Cocktail Table Set', category: 'Furniture', color: 'Black', quantity: 30, dimensions: '30 in round', storage: 'Furniture Bay · Row C', description: 'Standing-height cocktail tables for networking and pre-function spaces.', imageStyle: 'antique-sofa', accessTier: 1 },
+  { id: 'fr-drape', name: 'Black Pipe & Drape', category: 'Backdrops', color: 'Black', quantity: 16, dimensions: '10 ft sections', storage: 'Equipment Room · Wall Rack', description: 'Flexible room division and backdrop system for exhibits, stages and service areas.', imageStyle: 'green-wall', accessTier: 1 },
+  { id: 'fr-uplights', name: 'Wireless LED Uplights', category: 'Lighting', color: 'RGB / tunable white', quantity: 36, dimensions: 'Battery fixtures', storage: 'AV Room · Charging Rack', description: 'Wireless architectural uplighting for brand colors, galas and evening events.', imageStyle: 'chandelier', featured: true, accessTier: 2 },
+  { id: 'fr-lounge', name: 'Modular Lounge Collection', category: 'Furniture', color: 'Slate / navy', quantity: 4, dimensions: 'Modular sets', storage: 'Furniture Bay · Row A', description: 'Contemporary lounge groupings for networking, VIP and sponsor areas.', imageStyle: 'antique-sofa', accessTier: 2 },
+  { id: 'fr-easels', name: 'Display Easel Set', category: 'Signs', color: 'Black', quantity: 12, dimensions: 'Floor standing', storage: 'Resource Library · Shelf B', description: 'Sign and display stands for agendas, sponsor boards, seating plans and wayfinding.', imageStyle: 'welcome-easel', accessTier: 1 },
+  { id: 'fr-linens', name: 'Black Linen Collection', category: 'Linens', color: 'Black', quantity: 40, dimensions: 'Assorted table sizes', storage: 'Textile Room · Rack 1', description: 'Neutral event linen collection for meetings, galas and private functions.', imageStyle: 'ivory-linens', accessTier: 3 },
 ]
 
 export const chandelierConfig: VenueConfig = {
@@ -494,4 +494,3 @@ export function itemAllowedForTier(item: InventoryItem, tier: PackageTier) {
 export const packages = chandelierPackages
 export const venueAreas = chandelierAreas
 export const inventory = chandelierInventory
-
