@@ -19,8 +19,9 @@ import PlatformAdmin from './pages/PlatformAdmin'
 import { PLATFORM_NAME, POWERED_BY_PLATFORM, platformConfig } from './config/platform'
 import { supabase } from './lib/supabase'
 import { getVenueStaffAccessBySlug, signInWithPassword, signOut as signOutSupabase } from './lib/repositories/auth'
+import { loadVenueConfigFromSupabase } from './lib/repositories/venueConfig'
 import CoupleAccess from './pages/CoupleAccess'
-import { chandelierOaks, foundryRivergate, itemAllowedForTier, juniperStone, packageById, venueConfigById, venueConfigBySlug, venueConfigs } from './data'
+import { applyVenueConfigOverride, chandelierOaks, foundryRivergate, itemAllowedForTier, juniperStone, packageById, venueConfigById, venueConfigBySlug, venueConfigs } from './data'
 import type { MessageContext, MessageRole, PlacedItem, VenueLead, WeddingMessage, WeddingProfile, WeddingStatus, WeddingWorkspace } from './types'
 
 
@@ -112,6 +113,7 @@ export default function App() {
   const [ownerAuthLoading, setOwnerAuthLoading] = useState(false)
   const [coupleAuthenticatedWeddingId, setCoupleAuthenticatedWeddingId] = useState<string | null>(() => readSession('venueVisions.saas.coupleSessionWeddingId', null))
   const [venueLeads, setVenueLeads] = useState<VenueLead[]>(() => readLocal('venueVisions.saas.leads.v1', []))
+  const [, setVenueConfigRevision] = useState(0)
 
   const activeVenue = venueConfigById(activeVenueId)
   const venueWeddings = useMemo(() => weddings.filter((wedding) => wedding.venueId === activeVenueId), [weddings, activeVenueId])
@@ -193,6 +195,31 @@ export default function App() {
   useEffect(() => {
     setOwnerAuthLoading(false)
   }, [activeVenueId])
+
+  useEffect(() => {
+    if (!supabase) return
+
+    let cancelled = false
+
+    const refreshVenueConfig = async () => {
+      try {
+        const fallback = venueConfigBySlug('chandelier-oaks')
+        const config = await loadVenueConfigFromSupabase('chandelier-oaks', fallback)
+        if (cancelled || !config) return
+
+        applyVenueConfigOverride(config)
+        setVenueConfigRevision((current) => current + 1)
+      } catch (error) {
+        console.error('Unable to load Chandelier Oaks configuration from Supabase.', error)
+      }
+    }
+
+    void refreshVenueConfig()
+
+    return () => {
+      cancelled = true
+    }
+  }, [ownerAuthenticatedVenueId])
 
 
   const updateActiveWedding = (updater: (current: WeddingWorkspace) => WeddingWorkspace) => setWeddings((current) => current.map((wedding) => wedding.id === activeWedding?.id ? updater(wedding) : wedding))
@@ -404,5 +431,6 @@ export default function App() {
     </div>
   )
 }
+
 
 
