@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+﻿import type { CSSProperties } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import Header, { type PageKey } from './components/Header'
 import Home from './pages/Home'
@@ -60,7 +60,7 @@ const foundryPlan: PlacedItem[] = [
 
 const previewWeddings: WeddingWorkspace[] = [
   { id: 'wedding-sarah-john', venueId: chandelierOaks.id, accessSlug: 'sarah-john', accessCode: '111111', status: 'Designing', paymentStepsCompleted: 2, profile: { couple: 'Sarah & John', date: '2026-10-17', guests: 125, packageId: 'weekend', ceremonyArea: 'under-the-oaks', receptionArea: 'pecan-pavilion', primaryEmail: 'sarah@example.com', partnerEmail: 'john@example.com', contractSigned: true, reservationPaid: true, notes: 'Use warm lanterns and greenery on guest tables. Keep the pavilion entrance simple and leave plenty of dance-floor space.' }, selections: [{ itemId: 'gold-lantern', quantity: 12 }, { itemId: 'french-doors', quantity: 1 }, { itemId: 'green-wall', quantity: 1 }], placedItems: chandelierPlan, messages: chandelierMessages },
-  { id: 'wedding-ashley-mark', venueId: chandelierOaks.id, accessSlug: 'ashley-mark', accessCode: '222222', status: 'Designing', paymentStepsCompleted: 1, profile: { couple: 'Ashley & Mark', date: '2026-10-24', guests: 58, packageId: 'classic', ceremonyArea: 'hilltop-gazebo', receptionArea: 'pecan-pavilion', primaryEmail: 'ashley@example.com', partnerEmail: 'mark@example.com', contractSigned: true, reservationPaid: true, notes: 'Simple ceremony at the gazebo and a traditional reception in the pavilion.' }, selections: [{ itemId: 'gold-lantern', quantity: 8 }, { itemId: 'welcome-easel', quantity: 1 }], placedItems: [{ id: 'ashley-table-1', type: 'round-table', x: 175, y: 145, rotation: 0, scale: 1, label: 'Round table', areaId: 'pecan-pavilion' }, { id: 'ashley-table-2', type: 'round-table', x: 355, y: 145, rotation: 0, scale: 1, label: 'Round table', areaId: 'pecan-pavilion' }, { id: 'ashley-dance', type: 'dance-floor', x: 520, y: 220, rotation: 0, scale: .9, label: 'Dance floor', areaId: 'pecan-pavilion' }], messages: [{ id: 'ashley-msg-1', senderRole: 'bride', senderName: 'Ashley & Mark', body: 'Can we keep the gazebo ceremony very simple and move most of the décor to the pavilion?', timestamp: '2026-08-19T16:10:00-05:00', attachments: [], context: { kind: 'area', id: 'hilltop-gazebo', label: 'Hilltop Gazebo' }, readByBride: true, readByVenue: false }] },
+  { id: 'wedding-ashley-mark', venueId: chandelierOaks.id, accessSlug: 'ashley-mark', accessCode: '222222', status: 'Designing', paymentStepsCompleted: 1, profile: { couple: 'Ashley & Mark', date: '2026-10-24', guests: 58, packageId: 'classic', ceremonyArea: 'hilltop-gazebo', receptionArea: 'pecan-pavilion', primaryEmail: 'ashley@example.com', partnerEmail: 'mark@example.com', contractSigned: true, reservationPaid: true, notes: 'Simple ceremony at the gazebo and a traditional reception in the pavilion.' }, selections: [{ itemId: 'gold-lantern', quantity: 8 }, { itemId: 'welcome-easel', quantity: 1 }], placedItems: [{ id: 'ashley-table-1', type: 'round-table', x: 175, y: 145, rotation: 0, scale: 1, label: 'Round table', areaId: 'pecan-pavilion' }, { id: 'ashley-table-2', type: 'round-table', x: 355, y: 145, rotation: 0, scale: 1, label: 'Round table', areaId: 'pecan-pavilion' }, { id: 'ashley-dance', type: 'dance-floor', x: 520, y: 220, rotation: 0, scale: .9, label: 'Dance floor', areaId: 'pecan-pavilion' }], messages: [{ id: 'ashley-msg-1', senderRole: 'bride', senderName: 'Ashley & Mark', body: 'Can we keep the gazebo ceremony very simple and move most of the dÃ©cor to the pavilion?', timestamp: '2026-08-19T16:10:00-05:00', attachments: [], context: { kind: 'area', id: 'hilltop-gazebo', label: 'Hilltop Gazebo' }, readByBride: true, readByVenue: false }] },
   { id: 'wedding-jennifer-matt', venueId: chandelierOaks.id, accessSlug: 'jennifer-matt', accessCode: '333333', status: 'Not started', paymentStepsCompleted: 1, profile: { couple: 'Jennifer & Matt', date: '2026-11-07', guests: 210, packageId: 'luxury', ceremonyArea: 'under-the-oaks', receptionArea: 'pecan-pavilion', primaryEmail: 'jennifer@example.com', partnerEmail: 'matt@example.com', contractSigned: true, reservationPaid: true, notes: '' }, selections: [], placedItems: [], messages: [] },
   { id: 'wedding-olivia-james', venueId: juniperStone.id, accessSlug: 'olivia-james', accessCode: '444444', status: 'Designing', paymentStepsCompleted: 2, profile: { couple: 'Olivia & James', date: '2026-09-12', guests: 132, packageId: 'js-signature', ceremonyArea: 'stone-courtyard', receptionArea: 'glass-hall', primaryEmail: 'olivia@example.com', partnerEmail: 'james@example.com', contractSigned: true, reservationPaid: true, notes: 'Long banquet tables, warm copper accents and a clean ceremony frame.' }, selections: [{ itemId: 'js-smoked-vases', quantity: 20 }, { itemId: 'js-copper-stands', quantity: 8 }, { itemId: 'js-oak-arch', quantity: 1 }], placedItems: juniperPlan, messages: [{ id: 'juniper-msg-1', senderRole: 'bride', senderName: 'Olivia & James', body: 'Can we keep the Glass Hall tables long and clean, with the copper stands only on every other table?', timestamp: '2026-08-20T11:15:00-05:00', attachments: [], context: { kind: 'area', id: 'glass-hall', label: 'Glass Hall' }, readByBride: true, readByVenue: false }] },
   { id: 'wedding-maya-theo', venueId: juniperStone.id, accessSlug: 'maya-theo', accessCode: '555555', status: 'Ready', paymentStepsCompleted: 3, profile: { couple: 'Maya & Theo', date: '2026-11-21', guests: 76, packageId: 'js-essential', ceremonyArea: 'orchard-lawn', receptionArea: 'glass-hall', primaryEmail: 'maya@example.com', partnerEmail: 'theo@example.com', contractSigned: true, reservationPaid: true, notes: 'Simple orchard ceremony with mostly candlelight and bud vases inside.' }, selections: [{ itemId: 'js-smoked-vases', quantity: 28 }, { itemId: 'js-hurricanes', quantity: 24 }], placedItems: [], messages: [] },
@@ -158,10 +158,11 @@ export default function App() {
       return
     }
 
+    const client = supabase
     let cancelled = false
 
     const refreshPlatformAccess = async () => {
-      const { data: sessionData } = await supabase.auth.getSession()
+      const { data: sessionData } = await client.auth.getSession()
       if (!sessionData.session) {
         if (!cancelled) {
           setPlatformAuthenticated(false)
@@ -170,7 +171,7 @@ export default function App() {
         return
       }
 
-      const { data, error } = await supabase.rpc('is_platform_admin')
+      const { data, error } = await client.rpc('is_platform_admin')
       if (!cancelled) {
         setPlatformAuthenticated(!error && data === true)
         setPlatformAuthLoading(false)
@@ -179,7 +180,7 @@ export default function App() {
 
     void refreshPlatformAccess()
 
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+    const { data: listener } = client.auth.onAuthStateChange(() => {
       window.setTimeout(() => { void refreshPlatformAccess() }, 0)
     })
 
@@ -391,8 +392,8 @@ export default function App() {
             {ownerAuthenticated || coupleAuthenticatedWeddingId === activeWedding?.id || page === 'venue'
               ? <><span>{activeVenue.profile.shortName}</span><span>{POWERED_BY_PLATFORM}</span></>
               : platformAuthenticated
-                ? <><span>{PLATFORM_NAME} Admin</span><span>Internal proof of concept · {venueConfigs.length} venue profiles</span></>
-                : <><span>{PLATFORM_NAME}</span><span>Event venue management & planning · venue-first private client workspaces</span></>}
+                ? <><span>{PLATFORM_NAME} Admin</span><span>Internal proof of concept Â· {venueConfigs.length} venue profiles</span></>
+                : <><span>{PLATFORM_NAME}</span><span>Event venue management & planning Â· venue-first private client workspaces</span></>}
           </div>
           <div className="site-footer__creator">
             <img src={platformConfig.creator.logoPath} alt="" />
@@ -403,3 +404,5 @@ export default function App() {
     </div>
   )
 }
+
+
