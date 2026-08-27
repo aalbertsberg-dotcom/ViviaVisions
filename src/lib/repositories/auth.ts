@@ -24,3 +24,30 @@ export async function sendPasswordReset(email: string, redirectTo?: string) {
   if (error) throw error
   return data
 }
+
+
+export async function getVenueStaffAccessBySlug(slug: string, userId: string) {
+  const client = requireSupabase()
+
+  const { data: venue, error: venueError } = await client
+    .from('venues')
+    .select('id, slug, short_name')
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (venueError) throw venueError
+  if (!venue) return { allowed: false, role: null as string | null, venueId: null as string | null }
+
+  const { data: membership, error: membershipError } = await client
+    .from('venue_memberships')
+    .select('role')
+    .eq('venue_id', venue.id)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (membershipError) throw membershipError
+
+  const role = membership?.role ?? null
+  const allowed = role === 'owner' || role === 'staff'
+  return { allowed, role, venueId: venue.id }
+}

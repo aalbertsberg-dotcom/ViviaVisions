@@ -92,3 +92,32 @@ git push
 - Platform admin access is verified against the `profiles.platform_role = 'admin'` authorization helper.
 - Supabase sessions now persist securely through the browser client.
 - Venue-owner and client demo-code migration will follow separately.
+
+
+## v1.8.2
+- Replaced the Chandelier Oaks temporary owner code with real Supabase email/password authentication.
+- Owner/staff authorization is verified through `venue_memberships`.
+- Existing sessions are restored and re-checked against the venue membership.
+- Platform admins can still access venue administration for support.
+- Fictional showcase venues keep their temporary preview passwords for now.
+
+
+## v1.8.3
+- Removed the legacy owner-code session restore that could open a venue owner portal without a fresh authorization check.
+- Platform-admin status no longer automatically grants venue-owner access.
+- Chandelier Oaks owner access now requires an explicit `owner` or `staff` row in `venue_memberships`.
+- Platform support/impersonation access can be added later as an explicit audited workflow.
+
+
+## v1.8.4
+- Fixed the Chandelier Oaks owner page getting stuck on "Checking your session...".
+- Signed-out users now fall back to the email/password form instead of waiting indefinitely.
+- Venue authorization now uses the authenticated session user ID directly.
+- Venue access checks fail closed after a short timeout rather than leaving the UI in a loading state.
+
+
+## v1.8.5
+- Removed automatic owner-portal session restoration for Chandelier Oaks.
+- The Chandelier owner portal now shows the email/password form unless owner access was explicitly established in the current app session.
+- Signing out clears owner access immediately and returns to the public venue page.
+- This avoids shared Supabase sessions silently opening the owner portal while platform and venue authentication are still being separated.

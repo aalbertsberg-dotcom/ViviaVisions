@@ -13,16 +13,17 @@ type AdminProps = {
   onOpenWedding: (id: string, destination?: PageKey) => void
   onAddWedding: (input: { couple: string; date: string; guests: number; packageId: string; primaryEmail: string }) => string | null
   authenticated: boolean
-  onAuthenticate: (code: string) => boolean
+  authLoading: boolean
+  onAuthenticate: (emailOrCode: string, password?: string) => Promise<{ ok: boolean; error?: string }>
   onExitPreview: () => void
-  onLogout: () => void
+  onLogout: () => void | Promise<void>
   onNavigate: (page: PageKey) => void
 }
 
 function formatDate(value: string) { return new Date(`${value}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) }
 function venueUnread(wedding: WeddingWorkspace) { return wedding.messages.filter((message) => message.senderRole !== 'venue' && !message.readByVenue).length }
 
-export default function Admin({ venueId, weddings, activeWeddingId, onSelectWedding, onOpenWedding, onAddWedding, authenticated, onAuthenticate, onExitPreview, onLogout, onNavigate }: AdminProps) {
+export default function Admin({ venueId, weddings, activeWeddingId, onSelectWedding, onOpenWedding, onAddWedding, authenticated, authLoading, onAuthenticate, onExitPreview, onLogout, onNavigate }: AdminProps) {
   const config = venueConfigById(venueId)
   const { profile: venue, inventory, packages } = config
   const eventLabel = venue.eventLabel ?? 'event'
@@ -30,6 +31,9 @@ export default function Admin({ venueId, weddings, activeWeddingId, onSelectWedd
   const clientLabel = venue.clientLabel ?? 'client'
   const clientPlural = venue.clientPluralLabel ?? 'clients'
   const [accessCode, setAccessCode] = useState(config.ownerAccessCode)
+  const [ownerEmail, setOwnerEmail] = useState('')
+  const [ownerPassword, setOwnerPassword] = useState('')
+  const [authSubmitting, setAuthSubmitting] = useState(false)
   const [accessError, setAccessError] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [couple, setCouple] = useState('')
@@ -55,14 +59,40 @@ export default function Admin({ venueId, weddings, activeWeddingId, onSelectWedd
           <p className="eyebrow">{venue.shortName.toUpperCase()} · {isChandelier ? 'OWNER PORTAL ACCESS' : 'OWNER PREVIEW ACCESS'}</p>
           <h1>{isChandelier ? 'Chandelier Oaks owner portal.' : 'Venue owner dashboard.'}</h1>
           <p className="owner-access-lead">{isChandelier ? 'Enter the private Chandelier Oaks operations area for weddings, inventory, planning, messages and setup.' : `This gate represents the private ${venue.shortName} admin area. Production would use secure authentication and venue-specific permissions.`}</p>
-          <form className="owner-access-form" onSubmit={(event) => { event.preventDefault(); if (!onAuthenticate(accessCode)) setAccessError(isChandelier ? 'Incorrect owner access code.' : 'Incorrect preview password.'); else setAccessError('') }}>
-            <label htmlFor="ownerAccess">{isChandelier ? 'Owner access code' : 'Temporary preview password'}</label>
-            <input id="ownerAccess" value={accessCode} onChange={(event) => { setAccessCode(event.target.value); setAccessError('') }} autoFocus />
-            <small>{isChandelier ? 'Current build access code' : 'Prefilled for this preview'}: <strong>{config.ownerAccessCode}</strong></small>
-            {accessError && <div className="owner-access-error" role="alert">{accessError}</div>}
-            <button className="button button--primary full-width" type="submit">Enter {venue.shortName} Owner View</button>
-          </form>
-          <div className="owner-access-note"><strong>{isChandelier ? 'Current build access.' : 'Preview environment.'}</strong> {isChandelier ? 'The venue workflow is configured; secure production authentication and backend storage are still pending.' : 'No real customer, contract or payment information should be entered here.'}</div>
+          {isChandelier ? (
+            authLoading ? <div className="owner-access-note"><strong>Checking your session…</strong></div> : (
+              <form className="owner-access-form" onSubmit={async (event) => {
+                event.preventDefault()
+                setAuthSubmitting(true)
+                setAccessError('')
+                const result = await onAuthenticate(ownerEmail, ownerPassword)
+                if (!result.ok) setAccessError(result.error ?? 'Unable to sign in.')
+                setAuthSubmitting(false)
+              }}>
+                <label htmlFor="ownerEmail">Email</label>
+                <input id="ownerEmail" type="email" autoComplete="username" value={ownerEmail} onChange={(event) => { setOwnerEmail(event.target.value); setAccessError('') }} autoFocus required />
+                <label htmlFor="ownerPassword">Password</label>
+                <input id="ownerPassword" type="password" autoComplete="current-password" value={ownerPassword} onChange={(event) => { setOwnerPassword(event.target.value); setAccessError('') }} required />
+                <small>Use the account assigned to the {venue.shortName} owner or staff team. Owner access is verified when you sign in.</small>
+                {accessError && <div className="owner-access-error" role="alert">{accessError}</div>}
+                <button className="button button--primary full-width" type="submit" disabled={authSubmitting}>{authSubmitting ? 'Signing in…' : `Sign in to ${venue.shortName}`}</button>
+              </form>
+            )
+          ) : (
+            <form className="owner-access-form" onSubmit={async (event) => {
+              event.preventDefault()
+              const result = await onAuthenticate(accessCode)
+              if (!result.ok) setAccessError(result.error ?? 'Incorrect preview password.')
+              else setAccessError('')
+            }}>
+              <label htmlFor="ownerAccess">Temporary preview password</label>
+              <input id="ownerAccess" value={accessCode} onChange={(event) => { setAccessCode(event.target.value); setAccessError('') }} autoFocus />
+              <small>Prefilled for this preview: <strong>{config.ownerAccessCode}</strong></small>
+              {accessError && <div className="owner-access-error" role="alert">{accessError}</div>}
+              <button className="button button--primary full-width" type="submit">Enter {venue.shortName} Owner View</button>
+            </form>
+          )}
+          <div className="owner-access-note"><strong>{isChandelier ? 'Real venue authentication is active.' : 'Preview environment.'}</strong> {isChandelier ? 'Chandelier Oaks requires an explicit owner/staff sign-in. Signing out returns to the public venue page.' : 'No real customer, contract or payment information should be entered here.'}</div>
           <button className="text-link owner-access-back" onClick={onExitPreview}>← Back to {venue.shortName}</button>
         </section>
       </main>
