@@ -1,4 +1,4 @@
-# ViviaVisions v1.15.0
+# ViviaVisions v1.15.1
 
 **Every detail. Every option. Every vision.**
 

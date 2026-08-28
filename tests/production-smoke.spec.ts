@@ -37,3 +37,17 @@ test('public pages do not overflow horizontally', async ({ page }) => {
     expect(fitsViewport, `${route} should fit the viewport`).toBe(true)
   }
 })
+test('sign-in choices include VV Admin and admin password recovery', async ({ page }) => {
+  await page.goto('/#/signin')
+  await expect(page.getByRole('heading', { name: /Choose how you’re signing in/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'ViviaVisions Admin' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /owner \/ staff/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /My Chandelier Oaks wedding/i })).toBeVisible()
+
+  await page.getByTestId('platform-admin-signin').click()
+  await expect(page).toHaveURL(/#\/platform$/)
+  await expect(page.getByRole('heading', { name: /Administrator sign in/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Forgot password?' })).toBeVisible()
+  await expect(page.getByText(/Create account/i)).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Back to sign-in options/i })).toBeVisible()
+})

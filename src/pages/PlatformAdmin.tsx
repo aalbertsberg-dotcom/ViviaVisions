@@ -1,9 +1,12 @@
 import type { CSSProperties } from 'react'
-import { useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import type { PageKey } from '../components/Header'
 import type { VenueConfig, VenueLead, WeddingWorkspace } from '../types'
 import { PLATFORM_NAME, PLATFORM_NAME_UPPER, PLATFORM_SHORT_NAME } from '../config/platform'
 import { backendStatus } from '../lib/backend'
+import { buildPublicAppUrl } from '../config/runtime'
+import { sendPasswordReset, signOut as signOutSupabase, updatePassword } from '../lib/repositories/auth'
+import { supabase } from '../lib/supabase'
 
 type PlatformAdminProps = {
   authenticated: boolean
@@ -16,6 +19,18 @@ type PlatformAdminProps = {
   venues: VenueConfig[]
   onOpenVenue: (slug: string) => void
   onManageVenue: (slug: string) => void | Promise<void>
+}
+
+function hasPlatformRecoveryMarker() {
+  return new URLSearchParams(window.location.search).get('platformRecovery') === '1'
+}
+
+function clearPlatformRecoveryMarker() {
+  const url = new URL(window.location.href)
+  url.searchParams.delete('platformRecovery')
+  url.searchParams.delete('code')
+  const query = url.searchParams.toString()
+  window.history.replaceState({}, '', `${url.pathname}${query ? `?${query}` : ''}${url.hash || '#/platform'}`)
 }
 
 function formatActivityTime(value: string) {
@@ -42,6 +57,126 @@ export default function PlatformAdmin({
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [status, setStatus] = useState('')
+  const [recoveryMode, setRecoveryMode] = useState(hasPlatformRecoveryMarker)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+
+  useEffect(() => {
+    if (!supabase) return
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true)
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
+  const requestPasswordReset = async () => {
+    const cleanEmail = email.trim().toLowerCase()
+    if (!cleanEmail) {
+      setError('Enter your email address first.')
+      return
+    }
+
+    setSubmitting(true)
+    setError('')
+    setStatus('')
+
+    try {
+      await sendPasswordReset(
+        cleanEmail,
+        buildPublicAppUrl('#/platform', { platformRecovery: '1' }),
+      )
+      setStatus('If that email has a ViviaVisions account, a password reset link has been sent. Resetting a password does not grant administrator access.')
+    } catch (resetError) {
+      setError(resetError instanceof Error ? resetError.message : 'Unable to send the password reset email.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const submitRecovery = async (event: FormEvent) => {
+    event.preventDefault()
+    setError('')
+    setStatus('')
+
+    if (newPassword.length < 8) {
+      setError('Use a password with at least 8 characters.')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('The new passwords do not match.')
+      return
+    }
+
+    setSubmitting(true)
+
+    try {
+      let recoveryEmail = ''
+      if (supabase) {
+        const { data } = await supabase.auth.getUser()
+        recoveryEmail = data.user?.email ?? ''
+      }
+
+      await updatePassword(newPassword)
+      await signOutSupabase()
+      clearPlatformRecoveryMarker()
+      if (recoveryEmail) setEmail(recoveryEmail)
+      setRecoveryMode(false)
+      setPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setStatus('Password updated. Sign in to ViviaVisions Admin with your new password.')
+    } catch (recoveryError) {
+      setError(recoveryError instanceof Error ? recoveryError.message : 'Unable to update the password.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (recoveryMode) {
+    return (
+      <main className="owner-access-page shell">
+        <section className="panel owner-access-card platform-access-card">
+          <div className="owner-access-lock">{PLATFORM_SHORT_NAME}</div>
+          <p className="eyebrow">{PLATFORM_NAME_UPPER} ADMIN</p>
+          <h1>Choose a new password.</h1>
+          <p className="platform-access-copy">This changes the password for the account that opened the secure recovery link. It does not create or grant administrator access.</p>
+
+          <form className="owner-access-form" onSubmit={submitRecovery}>
+            <label htmlFor="platform-new-password">New password</label>
+            <input
+              id="platform-new-password"
+              type="password"
+              minLength={8}
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(event) => { setNewPassword(event.target.value); setError(''); setStatus('') }}
+              required
+            />
+
+            <label htmlFor="platform-confirm-password">Confirm new password</label>
+            <input
+              id="platform-confirm-password"
+              type="password"
+              minLength={8}
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(event) => { setConfirmPassword(event.target.value); setError(''); setStatus('') }}
+              required
+            />
+
+            {error && <div className="owner-access-error" role="alert">{error}</div>}
+            {status && <div className="client-auth-status" role="status">{status}</div>}
+
+            <button className="button button--primary full-width" type="submit" disabled={submitting}>
+              {submitting ? 'Updating password…' : 'Update password'}
+            </button>
+          </form>
+        </section>
+      </main>
+    )
+  }
 
   if (!authenticated) {
     return (
@@ -76,6 +211,7 @@ export default function PlatformAdmin({
                 onChange={(event) => {
                   setEmail(event.target.value)
                   setError('')
+                  setStatus('')
                 }}
                 required
               />
@@ -89,17 +225,32 @@ export default function PlatformAdmin({
                 onChange={(event) => {
                   setPassword(event.target.value)
                   setError('')
+                  setStatus('')
                 }}
                 required
               />
 
-              {error && <div className="owner-access-error">{error}</div>}
+              <button
+                className="text-link client-forgot-password"
+                type="button"
+                onClick={() => { void requestPasswordReset() }}
+                disabled={submitting}
+              >
+                Forgot password?
+              </button>
+
+              {error && <div className="owner-access-error" role="alert">{error}</div>}
+              {status && <div className="client-auth-status" role="status">{status}</div>}
 
               <button className="button button--primary full-width" type="submit" disabled={submitting}>
                 {submitting ? 'Signing in…' : `Sign in to ${PLATFORM_SHORT_NAME} Admin`}
               </button>
             </form>
           )}
+
+          <button className="text-link owner-access-back" type="button" onClick={() => onNavigate('signin')}>
+            ← Back to sign-in options
+          </button>
         </section>
       </main>
     )

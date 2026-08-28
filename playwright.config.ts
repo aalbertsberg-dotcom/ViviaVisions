@@ -20,6 +20,6 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium-desktop', use: { ...devices['Desktop Chrome'] } },
-    { name: 'chromium-mobile', use: { ...devices['iPhone 13'] } },
+    { name: 'chromium-mobile', use: { ...devices['iPhone 13'], browserName: 'chromium' } },
   ],
 })
