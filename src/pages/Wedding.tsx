@@ -40,10 +40,30 @@ export default function Wedding({ venueId, profile, selections, unreadMessages, 
 
     <section className="wedding-action-grid">
       <button onClick={()=>onNavigate('catalog')}><span>{inventoryTitle.toUpperCase()}</span><strong>{selectedPieces} selected</strong><small>Browse resources available for this package tier.</small><b>→</b></button>
-      <button onClick={()=>onNavigate('planner')}><span>2D VENUE DESIGNER</span><strong>Build your layout</strong><small>{config.areas.map((a)=>a.name).slice(0,4).join(', ')}. AI Preview follows the finished 2D plan.</small><b>→</b></button>
+      <button onClick={()=>onNavigate('planner')}><span>2D VENUE DESIGNER</span><strong>Build your layout</strong><small>{config.areas.map((a)=>a.name).slice(0,4).join(', ')}. AI visual preview is coming soon.</small><b>→</b></button>
       <button onClick={()=>onNavigate('media')}><span>MEDIA &amp; INSPIRATION</span><strong>Photos, videos and planning files</strong><small>Keep venue references and {eventLabel} inspiration in one place.</small><b>→</b></button>
       <button onClick={()=>onNavigate('messages')}><span>MESSAGES</span><strong>{unreadMessages?`${unreadMessages} unread`:'Conversation up to date'}</strong><small>Questions, files and linked resources stay with this {eventLabel}.</small><b>→</b></button>
     </section>
+
+    {clientAuthenticated && !ownerMode && (
+      <section className="workspace-guidance-banner">
+        <div>
+          <span className="mini-label">YOUR PLANNING ACCESS</span>
+          <strong>You control the planning details. The venue controls the booking record.</strong>
+        </div>
+        <p>You can update guest count, ceremony/reception spaces, notes, décor selections, layouts, media and messages. {venue.shortName} controls the booked name, date, package, contact emails, contract and payment status.</p>
+      </section>
+    )}
+
+    {ownerMode && !venue.isSample && (
+      <section className="workspace-guidance-banner workspace-guidance-banner--owner">
+        <div>
+          <span className="mini-label">VENUE CONTROL</span>
+          <strong>Booking identity and client access stay with the venue team.</strong>
+        </div>
+        <p>Changes to the event name, date, package and client emails update the venue record. Client-managed planning changes sync back into this workspace.</p>
+      </section>
+    )}
 
     <div className="wedding-content-grid">
       <section className="panel wedding-details-panel"><div className="panel__heading"><div><p className="eyebrow">{eventLabel.toUpperCase()} DETAILS</p><h2>Plan the {isWedding?'day':'event'}</h2><p>{isChandelier && ownerMode ? 'Owner changes save automatically to the venue database.' : isChandelier && clientAuthenticated ? 'Client-managed planning details save securely to this private workspace.' : isChandelier ? 'Demo changes remain in this browser.' : 'Changes save automatically in this browser preview.'}</p></div></div><div className="form-grid two-col wedding-detail-fields">
@@ -69,7 +89,7 @@ export default function Wedding({ venueId, profile, selections, unreadMessages, 
       <div className="planning-workflow__steps">
         <button className={selectedPieces ? 'done' : 'active'} onClick={()=>onNavigate('catalog')}><b>1</b><span><strong>Select inventory</strong><small>{selectedPieces ? `${selectedPieces} pieces selected` : 'Choose décor and venue resources'}</small></span></button>
         <button className={selectedPieces ? 'active' : ''} onClick={()=>onNavigate('planner')}><b>2</b><span><strong>Build your layout</strong><small>Place tables, chairs and selected resources</small></span></button>
-        <button onClick={()=>onNavigate('ai-preview')}><b>3</b><span><strong>Visual preview</strong><small>Review the layout in the venue</small></span></button>
+        <button onClick={()=>onNavigate('ai-preview')}><b>3</b><span><strong>AI visual preview</strong><small>Coming soon · your 2D plan stays the source of truth</small></span></button>
         <button onClick={()=>onNavigate('summary')}><b>4</b><span><strong>Setup summary</strong><small>Prepare the final venue handoff</small></span></button>
       </div>
       <div className="planning-workflow__next">

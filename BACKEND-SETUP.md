@@ -1,73 +1,45 @@
-# Backend setup — first production step
+# ViviaVisions backend setup
 
-ViviaVisions v1.8.0 is prepared to connect to Supabase without breaking the current browser demo.
+ViviaVisions uses one Supabase project for the platform. Venues are isolated tenants inside the same database.
 
-## 1. Create the Supabase project
+## Environment
 
-Create one Supabase project for the platform. Do not create one project per venue. Venues are tenants inside the same secured database.
-
-## 2. Create the database
-
-In Supabase **SQL Editor**, paste and run:
-
-`supabase/migrations/202608270001_initial_multitenant.sql`
-
-That creates the first production tables for:
-
-- users / profiles
-- venues
-- venue owners and staff
-- clients
-- packages
-- spaces
-- inventory
-- events
-- selections
-- layouts and placed items
-- messages and read state
-- media metadata
-- invitations
-- private media storage
-
-It also enables Row Level Security so venue data is separated at the database layer.
-
-## 3. Connect the React app
-
-Copy `.env.example` to `.env.local`:
-
-```powershell
-Copy-Item .env.example .env.local
-notepad .env.local
-```
-
-From Supabase **Connect**, copy the Project URL and Publishable Key into:
+Copy `.env.example` to `.env.local` and set:
 
 ```text
 VITE_SUPABASE_URL=...
 VITE_SUPABASE_PUBLISHABLE_KEY=...
+VITE_PUBLIC_APP_URL=https://YOUR_PUBLIC_DOMAIN/
 ```
 
-Never use a `service_role` key in the React app.
+The publishable key is browser-safe. Never place the `service_role` key in Vite environment variables.
 
-## 4. Install and verify
+## Database migrations
 
-```powershell
-npm install
-npm run check
-```
+Run every file in `supabase/migrations` in numeric order.
 
-The internal Admin POC will show **Backend: Supabase connected** when the two environment values are present.
+The current migration set includes:
 
-## What happens next
+- multi-tenant schema and RLS
+- event retention
+- secure client authentication
+- event hard-delete guard
+- client account revoke/restore management
+- generic client portal discovery
 
-After the project connects successfully, migrate **Chandelier Oaks** first:
+## Authentication model
 
-1. venue profile / branding
-2. packages
-3. spaces
-4. inventory
-5. owner account
-6. clients + events
-7. selections/layouts/messages/media
+- `profiles.platform_role = 'admin'`: ViviaVisions platform administration
+- `venue_memberships`: venue owner/staff permissions
+- `client_users`: authenticated client/event relationships
+- `client_access_blocks`: durable per-event access revocation
 
-The temporary demo codes stay in place until real Supabase Auth is wired into the sign-in screens.
+Real clients authenticate with Supabase email/password. Primary and partner emails on the event are the approved identities that can claim the workspace.
+
+## Storage
+
+Private venue/event media uses the `venue-assets` Supabase Storage bucket and its RLS policies.
+
+## Production configuration
+
+See `PRODUCTION-SETUP.md` for public URLs, Supabase redirect allow-list settings, email templates, validation and launch checks.

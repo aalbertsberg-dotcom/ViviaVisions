@@ -3680,3 +3680,97 @@ body { font-size:15px; line-height:1.5; }
 .demo-event-access__item small {
   color: var(--muted);
 }
+/* v1.12 production workflow polish */
+.workspace-guidance-banner {
+  display: grid;
+  grid-template-columns: minmax(220px, .8fr) minmax(320px, 1.4fr);
+  gap: 22px;
+  align-items: center;
+  margin: 0 0 22px;
+  padding: 18px 20px;
+  border: 1px solid #cbdccc;
+  border-radius: 16px;
+  background: #f3f8f3;
+}
+
+.workspace-guidance-banner--owner {
+  border-color: var(--line);
+  background: #faf7f2;
+}
+
+.workspace-guidance-banner > div {
+  display: grid;
+  gap: 5px;
+}
+
+.workspace-guidance-banner strong {
+  color: var(--brown);
+  line-height: 1.35;
+}
+
+.workspace-guidance-banner p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.add-wedding-security-note {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 3px;
+  padding: 11px 13px;
+  border: 1px solid #cbdccc;
+  border-radius: 11px;
+  background: #f3f8f3;
+}
+
+.add-wedding-security-note strong {
+  color: var(--brown);
+  font-size: 12px;
+}
+
+.add-wedding-security-note span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.client-access-manager__heading--actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.client-access-manager__heading--actions > div {
+  display: grid;
+  gap: 3px;
+}
+
+.client-access-contact__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+  .workspace-guidance-banner {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .client-access-manager__heading--actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .client-access-contact__actions {
+    width: 100%;
+  }
+
+  .client-access-contact__actions .button {
+    flex: 1 1 145px;
+  }
+}

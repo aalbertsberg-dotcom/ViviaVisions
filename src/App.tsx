@@ -19,6 +19,7 @@ import ManageEvents from './pages/ManageEvents'
 import PlatformAdmin from './pages/PlatformAdmin'
 import { PLATFORM_NAME, POWERED_BY_PLATFORM, platformConfig } from './config/platform'
 import { isDemoClientWorkspace } from './config/demo'
+import { buildPublicAppUrl } from './config/runtime'
 import { supabase } from './lib/supabase'
 import { claimClientEventAccess, claimMyClientEvents, getVenueStaffAccessBySlug, signInWithPassword, signOut as signOutSupabase, signUpWithPassword } from './lib/repositories/auth'
 import { appendClientEventMessages, cancelVenueEvent, createVenueEventWorkspace, listVenueEventWorkspaces, markClientEventMessagesRead, permanentDeleteVenueEvent, reopenVenueEvent, resetEventPlanning, restoreVenueEvent, saveClientEventPlanningProfile, saveEventLayoutItems, saveEventMessages, saveEventProfile, setEventSelection, softDeleteVenueEvent } from './lib/repositories/events'
@@ -987,7 +988,9 @@ export default function App() {
 
     try {
       const accessSegment = (activeVenue.profile.clientLabel ?? 'client') === 'couple' ? 'couple' : 'client'
-      const signupRedirect = `${window.location.origin}${window.location.pathname}#/venue/${activeVenue.profile.slug}/${accessSegment}${accessSlug === CLIENT_PORTAL_SLUG ? '' : `/${encodeURIComponent(accessSlug)}`}`
+      const signupRedirect = buildPublicAppUrl(
+        `#/venue/${activeVenue.profile.slug}/${accessSegment}${accessSlug === CLIENT_PORTAL_SLUG ? '' : `/${encodeURIComponent(accessSlug)}`}`,
+      )
       const signup = await signUpWithPassword(email.toLowerCase(), password, signupRedirect)
       if (signup.user && Array.isArray(signup.user.identities) && signup.user.identities.length === 0) {
         return { ok: false, error: 'An account already exists for that email. Use Sign in instead.' }

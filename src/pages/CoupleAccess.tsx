@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { venueConfigById } from '../data'
+import { buildPublicAppUrl } from '../config/runtime'
 import { sendPasswordReset, signOut as signOutSupabase, updatePassword } from '../lib/repositories/auth'
 import { supabase } from '../lib/supabase'
 import type { WeddingWorkspace } from '../types'
@@ -118,13 +119,10 @@ export default function CoupleAccess({
     setStatus('')
 
     try {
-      const redirect = new URL(window.location.href)
-      redirect.search = ''
-      redirect.searchParams.set('clientRecovery', '1')
-      redirect.hash = portalMode
+      const recoveryHash = portalMode
         ? `#/venue/${encodeURIComponent(venue.slug)}/${accessSegment}`
         : `#/venue/${encodeURIComponent(venue.slug)}/${accessSegment}/${encodeURIComponent(accessSlug)}`
-      await sendPasswordReset(cleanEmail, redirect.toString())
+      await sendPasswordReset(cleanEmail, buildPublicAppUrl(recoveryHash, { clientRecovery: '1' }))
       setStatus('If that email has an account, a password reset link has been sent. Check your inbox and spam folder.')
     } catch (resetError) {
       setError(resetError instanceof Error ? resetError.message : 'Unable to send the password reset email.')
@@ -223,7 +221,7 @@ export default function CoupleAccess({
 
               {!createMode && <button className="text-link client-forgot-password" type="button" onClick={() => { void requestPasswordReset() }} disabled={submitting}>Forgot password?</button>}
 
-              <small>{createMode ? 'Use the same email address the venue has on the event. Email confirmation may be required.' : 'Only contacts linked to this event can open the workspace.'}</small>
+              <small>{createMode ? 'Use the same email address the venue has on the event. Email confirmation may be required.' : portalMode ? `Only emails assigned to an active ${eventLabel} at ${venue.shortName} can open a workspace.` : `Only contacts assigned to this ${eventLabel} can open the workspace.`}</small>
 
               {error && <div className="owner-access-error" role="alert">{error}</div>}
               {status && <div className="client-auth-status" role="status">{status}</div>}
@@ -269,7 +267,9 @@ export default function CoupleAccess({
           <strong>{demoMode ? 'Demonstration access.' : 'Secure client access.'}</strong>{' '}
           {demoMode
             ? 'These three showcase workspaces keep their visible access codes for demonstrations.'
-            : 'Your signed-in account is matched to the primary or partner email stored on this event. Other venue clients remain inaccessible.'}
+            : portalMode
+              ? `Your email is matched only to active ${eventLabel} records assigned to you at ${venue.shortName}.`
+              : 'Your signed-in account is matched to the primary or partner email stored on this event. Other venue clients remain inaccessible.'}
         </div>
         <button className="text-link owner-access-back" type="button" onClick={onBackHome}>← Back to {venue.shortName}</button>
       </section>
