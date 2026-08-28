@@ -292,9 +292,9 @@ export default function Planner({ venueId, selections, placedItems, setPlacedIte
     <main className="planner-page">
       <div className="planner-topbar shell">
         <div>
-          <p className="eyebrow">{venue.shortName.toUpperCase()} · STEP 1 · 2D VENUE DESIGNER</p>
-          <h1>Build the layout first.</h1>
-          <p className="planner-topbar__lead">This overhead plan is the placement source of truth. Add tables, chairs and venue resources here before creating an AI visualization.</p>
+          <p className="eyebrow">{venue.shortName.toUpperCase()} · STEP 2 · 2D VENUE DESIGNER</p>
+          <h1>Build your layout.</h1>
+          <p className="planner-topbar__lead">After choosing inventory, arrange tables, chairs and venue resources here. This overhead plan becomes the placement source of truth for the visual preview.</p>
         </div>
         <div className="planner-topbar__actions">
           <label className="area-select"><span>Design area</span><select value={area} onChange={(e) => { setArea(e.target.value); setSelectedId(null) }}>{venueAreas.filter((item) => item.plannerEnabled).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
@@ -323,7 +323,7 @@ export default function Planner({ venueId, selections, placedItems, setPlacedIte
                 return <button key={item.id} onClick={() => addInventoryItem(item)} disabled={inRoom >= item.quantity} title="Add this decoration to the floor plan"><span className={`decor-dot decor-dot--${item.imageStyle}`} /><span>{item.name}<small>{inRoom} in room</small></span><b>+</b></button>
               })}
             </div>
-          ) : <p className="toolbox-empty">Nothing selected yet. You can still add directly from inventory below.</p>}
+          ) : <p className="toolbox-empty">No inventory has been selected yet. Go back to Inventory for the normal planning flow, or add an available resource below.</p>}
 
           <div className="toolbox__divider" />
           <div className="toolbox__heading"><span className="mini-label">{(venue.inventoryLabel ?? 'ALL INVENTORY').toUpperCase()}</span><h2>Add resources directly</h2></div>
@@ -420,13 +420,16 @@ export default function Planner({ venueId, selections, placedItems, setPlacedIte
 
       <section className="planner-next-step shell panel">
         <div>
-          <span className="mini-label">STEP 2 · VISUALIZE</span>
+          <span className="mini-label">STEP 3 · VISUALIZE</span>
           <h2>Ready to see this layout in the venue?</h2>
           <p>AI Preview combines the current {currentArea.name} 2D plan with venue reference photos, selected resources and {eventLabel} style choices. Your overhead plan remains the placement reference.</p>
         </div>
-        <button className="button button--primary" onClick={continueToPreview} disabled={areaItems.length === 0}>
-          {areaItems.length === 0 ? 'Add layout pieces first' : 'Continue to AI Preview'}
-        </button>
+        <div className="planning-next-step__actions">
+          <button className="button button--ghost" onClick={() => onNavigate('catalog')}>Back to inventory</button>
+          <button className="button button--primary" onClick={continueToPreview} disabled={areaItems.length === 0}>
+            {areaItems.length === 0 ? 'Add layout pieces first' : 'Next: Create visual preview'}
+          </button>
+        </div>
       </section>
     </main>
   )

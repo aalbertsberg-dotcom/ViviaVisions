@@ -158,7 +158,7 @@ export type WeddingProfile = {
   reservationPaid: boolean
 }
 
-export type WeddingStatus = 'Ready' | 'Designing' | 'Not started'
+export type WeddingStatus = 'Ready' | 'Designing' | 'Not started' | 'Cancelled'
 
 export type MessageRole = 'bride' | 'venue'
 
@@ -197,6 +197,8 @@ export type WeddingWorkspace = {
   placedItems: PlacedItem[]
   messages: WeddingMessage[]
   paymentStepsCompleted: number
+  /** Soft-deleted workspaces remain recoverable during the retention window. */
+  deletedAt?: string
 }
 
 export type MediaScope = 'venue' | 'wedding'

@@ -3,6 +3,7 @@ import DecorVisual from '../components/DecorVisual'
 import { itemAllowedForTier, tierLabel, venueConfigById } from '../data'
 import type { Category, PackageTier, Selection } from '../types'
 import { PLATFORM_NAME } from '../config/platform'
+import type { PageKey } from '../components/Header'
 
 const categories: Array<'All' | Category> = ['All', 'Furniture', 'Arches', 'Backdrops', 'Lighting', 'Florals', 'Linens', 'Centerpieces', 'Signs', 'Specialty', 'Ceremony', 'Miscellaneous']
 
@@ -14,9 +15,10 @@ type CatalogProps = {
   onRequireAccess: () => void
   packageTier: PackageTier
   packageName: string
+  onNavigate: (page: PageKey) => void
 }
 
-export default function Catalog({ venueId, selections, onSetQuantity, canEdit, onRequireAccess, packageTier, packageName }: CatalogProps) {
+export default function Catalog({ venueId, selections, onSetQuantity, canEdit, onRequireAccess, packageTier, packageName, onNavigate }: CatalogProps) {
   const config = venueConfigById(venueId)
   const { profile: venue, inventory } = config
   const eventLabel = venue.eventLabel ?? 'event'
@@ -44,6 +46,7 @@ export default function Catalog({ venueId, selections, onSetQuantity, canEdit, o
 
   const selectedQuantity = (itemId: string) => selections.find((item) => item.itemId === itemId)?.quantity ?? 0
   const detail = inventory.find((item) => item.id === detailId)
+  const totalSelected = selections.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
     <main className="page-main shell catalog-page pinrose-page">
@@ -84,6 +87,19 @@ export default function Catalog({ venueId, selections, onSetQuantity, canEdit, o
       </div>
 
       {filtered.length === 0 && <div className="empty-state"><h3>No resources matched that filter.</h3><p>Try another category or turn off the package-only filter.</p></div>}
+
+      {canEdit && <section className="planning-next-step panel">
+        <div>
+          <span className="mini-label">STEP 1 · SELECT INVENTORY</span>
+          <h2>{totalSelected ? 'Next, place your selections in the layout.' : 'Choose the resources you want to use.'}</h2>
+          <p>{totalSelected ? `You have ${totalSelected} ${totalSelected === 1 ? 'piece' : 'pieces'} selected. The 2D Designer uses those choices while you arrange tables, chairs and venue resources.` : `Select the décor and resources for this ${eventLabel} first. Then build the room layout around those choices.`}</p>
+        </div>
+        <div className="planning-next-step__actions">
+          <button className="button button--primary" onClick={() => onNavigate('planner')} disabled={totalSelected === 0}>
+            {totalSelected ? 'Next: Build your layout' : 'Select inventory to continue'}
+          </button>
+        </div>
+      </section>}
 
       {detail && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setDetailId(null)}>

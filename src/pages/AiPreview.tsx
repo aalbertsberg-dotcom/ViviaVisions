@@ -99,7 +99,7 @@ export default function AiPreview({ venueId, weddingId, weddingName, preferredAr
       ctx.fillStyle = '#fff'; ctx.font = '600 34px Georgia'; ctx.fillText(`${weddingName} · ${area.name}`, 52, 625)
       ctx.font = '16px Arial'; ctx.fillStyle = '#eee8df'; ctx.fillText(`${style} · ${time} · ${view}`, 52, 655)
       ctx.font = '13px Arial'; ctx.fillStyle = '#d8d0c7'; const note = notes.trim().slice(0, 115) || `${PLATFORM_NAME} AI preview concept`; ctx.fillText(note, 52, 683)
-      ctx.textAlign = 'right'; ctx.fillStyle = '#f0d9b7'; ctx.font = '700 13px Arial'; ctx.fillText('AI PREVIEW DEMO · PRODUCTION USES GENERATIVE RENDERING', 1148, 683); ctx.textAlign = 'left'
+      ctx.textAlign = 'right'; ctx.fillStyle = '#f0d9b7'; ctx.font = '700 13px Arial'; ctx.fillText('VISUAL PREVIEW · PLACEMENT FOLLOWS THE 2D PLAN', 1148, 683); ctx.textAlign = 'left'
 
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', .9))
       if (previewUrl) URL.revokeObjectURL(previewUrl)
@@ -115,14 +115,14 @@ export default function AiPreview({ venueId, weddingId, weddingName, preferredAr
 
   return (
     <main className="page-main shell ai-preview-page">
-      <section className="page-intro page-intro--split ai-preview-intro"><div><p className="eyebrow">{venue.shortName.toUpperCase()} · STEP 2 · AI VISUALIZATION</p><h1>Preview the layout you already designed.</h1><p>The 2D plan stays in control of placement. This step adds a venue reference photo, resource choices and visual style to help you picture the finished setup for {weddingName}.</p></div><div className="ai-preview-intro__actions"><button className="button button--primary" onClick={() => onNavigate('planner')}>Back to 2D Designer</button><button className="button button--ghost" onClick={() => onNavigate('media')}>Reference Photos</button></div></section>
+      <section className="page-intro page-intro--split ai-preview-intro"><div><p className="eyebrow">{venue.shortName.toUpperCase()} · STEP 3 · VISUAL PREVIEW</p><h1>Preview the layout you already designed.</h1><p>The 2D plan stays in control of placement. This step adds a venue reference photo, resource choices and visual style to help you picture the finished setup for {weddingName}.</p></div><div className="ai-preview-intro__actions"><button className="button button--primary" onClick={() => onNavigate('planner')}>Back to 2D Designer</button><button className="button button--ghost" onClick={() => onNavigate('media')}>Reference Photos</button></div></section>
 
       <section className="panel ai-layout-source">
         <div><span className="mini-label">2D LAYOUT SOURCE</span><strong>{area.name}</strong><p>{areaItems.length} placed objects are being passed into this preview. Change placement in the 2D Designer, not here.</p></div>
         <button className="button button--ghost button--small" onClick={() => onNavigate('planner')}>Edit 2D layout</button>
       </section>
 
-      <section className="panel ai-production-note"><div><span className="mini-label">PREVIEW GENERATION</span><strong>The preview workflow is functional; photorealistic AI rendering comes with the secure backend.</strong></div><p>This preview packages the venue photo, structured 2D layout, selected resources and style choices exactly as the production renderer will. GitHub Pages cannot safely contain the private AI credentials needed for the final generative step.</p></section>
+      <section className="panel ai-production-note"><div><span className="mini-label">PREVIEW GENERATION</span><strong>Use the structured layout and venue references to review the event visually.</strong></div><p>The visual preview combines the venue reference, structured 2D layout, selected resources and style choices while keeping the 2D plan as the placement source of truth.</p></section>
 
       <div className="ai-preview-layout">
         <section className="panel ai-preview-controls">

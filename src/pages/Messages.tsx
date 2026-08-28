@@ -1,7 +1,17 @@
 import { useMemo, useRef, useState } from 'react'
-import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
+import type { KeyboardEvent } from 'react'
 import { venueConfigById } from '../data'
-import type { InventoryItem, MessageAttachment, MessageContext, MessageRole, PlacedItem, Selection, WeddingMessage, WeddingProfile } from '../types'
+import type {
+  InventoryItem,
+  MessageAttachment,
+  MessageContext,
+  MessageRole,
+  PlacedItem,
+  Selection,
+  WeddingMessage,
+  WeddingProfile,
+  WeddingWorkspace,
+} from '../types'
 import { PLATFORM_NAME } from '../config/platform'
 
 type MessagesProps = {
@@ -10,11 +20,15 @@ type MessagesProps = {
   selections: Selection[]
   placedItems: PlacedItem[]
   messages: WeddingMessage[]
-  setMessages: Dispatch<SetStateAction<WeddingMessage[]>>
+  setMessages: (next: WeddingMessage[] | ((current: WeddingMessage[]) => WeddingMessage[])) => void
   currentRole: MessageRole
   notificationsEnabled: boolean
   setNotificationsEnabled: (enabled: boolean) => void
   onOpenContext: (context: MessageContext) => void
+  weddings?: WeddingWorkspace[]
+  activeWeddingId?: string
+  onSelectWedding?: (id: string) => void
+  onOpenPlanning?: () => void
 }
 
 const MAX_ATTACHMENT_BYTES = 750_000
@@ -25,35 +39,88 @@ function formatMessageTime(timestamp: string) {
   return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
-export default function Messages({ venueId, profile, selections, placedItems, messages, setMessages, currentRole, notificationsEnabled, setNotificationsEnabled, onOpenContext }: MessagesProps) {
+function formatEventDate(value: string) {
+  return new Date(`${value}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function unreadForVenue(wedding: WeddingWorkspace) {
+  return wedding.messages.filter((message) => message.senderRole !== 'venue' && !message.readByVenue).length
+}
+
+function threadTimestamp(wedding: WeddingWorkspace) {
+  const last = wedding.messages[wedding.messages.length - 1]
+  return last ? new Date(last.timestamp).getTime() : new Date(`${wedding.profile.date}T12:00:00`).getTime()
+}
+
+function initials(value: string) {
+  return value.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || '?'
+}
+
+export default function Messages({
+  venueId,
+  profile,
+  selections,
+  placedItems,
+  messages,
+  setMessages,
+  currentRole,
+  notificationsEnabled,
+  setNotificationsEnabled,
+  onOpenContext,
+  weddings,
+  activeWeddingId,
+  onSelectWedding,
+  onOpenPlanning,
+}: MessagesProps) {
   const config = venueConfigById(venueId)
   const venue = config.profile
   const eventLabel = venue.eventLabel ?? 'event'
+  const eventPlural = venue.eventPluralLabel ?? 'events'
   const clientLabel = venue.clientLabel ?? 'client'
-  const isChandelier = venue.id === 'venue-chandelier-oaks'
   const clientDisplay = clientLabel[0].toUpperCase() + clientLabel.slice(1)
-  const roleLabel = (role: MessageRole) => role === 'bride' ? clientDisplay : 'Venue Team'
+  const ownerInbox = currentRole === 'venue' && Boolean(weddings && onSelectWedding)
+
   const venueInventory = config.inventory
   const venueAreas = config.areas
-  const fallbackArea = profile.receptionArea || venueAreas.find((area) => area.kind === 'Reception')?.id || venueAreas[0]?.id || ''
-  const fallbackAreaLabel = venueAreas.find((area) => area.id === fallbackArea)?.name || 'Reception area'
-
   const [draft, setDraft] = useState('')
   const [context, setContext] = useState<MessageContext | undefined>(undefined)
   const [attachments, setAttachments] = useState<MessageAttachment[]>([])
   const [attachmentError, setAttachmentError] = useState('')
-  const [simulating, setSimulating] = useState(false)
+  const [search, setSearch] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const selectedInventory = useMemo(
-    () => selections.map((selection) => venueInventory.find((item) => item.id === selection.itemId)).filter((item): item is InventoryItem => Boolean(item)),
+    () => selections
+      .map((selection) => venueInventory.find((item) => item.id === selection.itemId))
+      .filter((item): item is InventoryItem => Boolean(item)),
     [selections, venueInventory],
   )
-  const linkedAreas = useMemo(() => venueAreas.filter((area) => area.plannerEnabled).map((area) => ({ kind: 'area' as const, id: area.id, label: area.name })), [venueAreas, placedItems.length])
+
+  const linkedAreas = useMemo(
+    () => venueAreas
+      .filter((area) => area.plannerEnabled)
+      .map((area) => ({ kind: 'area' as const, id: area.id, label: area.name })),
+    [venueAreas],
+  )
+
+  const ownerThreads = useMemo(() => {
+    if (!weddings) return []
+    const query = search.trim().toLowerCase()
+    return weddings
+      .filter((wedding) => !wedding.deletedAt)
+      .filter((wedding) => {
+        if (!query) return true
+        return [
+          wedding.profile.couple,
+          wedding.profile.primaryEmail,
+          wedding.profile.partnerEmail,
+        ].some((value) => value.toLowerCase().includes(query))
+      })
+      .sort((a, b) => threadTimestamp(b) - threadTimestamp(a))
+  }, [weddings, search])
 
   const senderName = currentRole === 'bride' ? (profile.couple || clientDisplay) : `${venue.shortName} Team`
-  const otherRole: MessageRole = currentRole === 'bride' ? 'venue' : 'bride'
-  const otherName = otherRole === 'bride' ? (profile.couple || clientDisplay) : `${venue.shortName} Team`
+  const otherName = currentRole === 'bride' ? `${venue.shortName} Team` : (profile.couple || clientDisplay)
 
   const sendMessage = () => {
     if (!draft.trim() && !attachments.length && !context) return
@@ -69,11 +136,17 @@ export default function Messages({ venueId, profile, selections, placedItems, me
       readByVenue: currentRole === 'venue',
     }
     setMessages((current) => [...current, message])
-    setDraft(''); setAttachments([]); setContext(undefined); setAttachmentError('')
+    setDraft('')
+    setAttachments([])
+    setContext(undefined)
+    setAttachmentError('')
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); sendMessage() }
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault()
+      sendMessage()
+    }
   }
 
   const handleFiles = (files: FileList | null) => {
@@ -81,7 +154,10 @@ export default function Messages({ venueId, profile, selections, placedItems, me
     setAttachmentError('')
     const availableSlots = MAX_ATTACHMENTS - attachments.length
     Array.from(files).slice(0, availableSlots).forEach((file) => {
-      if (file.size > MAX_ATTACHMENT_BYTES) { setAttachmentError(isChandelier ? 'For the current build, each message attachment must be under 750 KB.' : 'For this browser preview, each message attachment must be under 750 KB.'); return }
+      if (file.size > MAX_ATTACHMENT_BYTES) {
+        setAttachmentError('Each message attachment must be under 750 KB.')
+        return
+      }
       const reader = new FileReader()
       reader.onload = () => {
         if (typeof reader.result !== 'string') return
@@ -99,112 +175,204 @@ export default function Messages({ venueId, profile, selections, placedItems, me
   }
 
   const toggleNotifications = async () => {
-    if (notificationsEnabled) { setNotificationsEnabled(false); return }
-    if (typeof Notification === 'undefined') { window.alert('This browser does not support browser notifications.'); return }
+    if (notificationsEnabled) {
+      setNotificationsEnabled(false)
+      return
+    }
+    if (typeof Notification === 'undefined') {
+      window.alert('This browser does not support browser notifications.')
+      return
+    }
     const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
     if (permission === 'granted') setNotificationsEnabled(true)
-    else window.alert(`Notification permission was not granted. Messages will still show an unread badge in ${PLATFORM_NAME}.`)
-  }
-
-  const notify = (body: string) => {
-    if (!notificationsEnabled || typeof Notification === 'undefined' || Notification.permission !== 'granted') return
-    new Notification(`${venue.shortName} · ${PLATFORM_NAME} message`, { body })
-  }
-
-  const simulateReply = () => {
-    if (simulating) return
-    setSimulating(true)
-    window.setTimeout(() => {
-      const replyBody = otherRole === 'venue'
-        ? `Thanks for the update! We have your note. We can use this thread to confirm resources and layout details as the ${eventLabel} gets closer.`
-        : `That works for us. I linked the layout so we can keep the ${eventLabel} setup discussion together.`
-      const reply: WeddingMessage = {
-        id: `msg-preview-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        senderRole: otherRole,
-        senderName: otherName,
-        body: replyBody,
-        timestamp: new Date().toISOString(),
-        attachments: [],
-        context: { kind: 'area', id: fallbackArea, label: fallbackAreaLabel },
-        readByBride: otherRole === 'bride',
-        readByVenue: otherRole === 'venue',
-      }
-      setMessages((current) => [...current, reply]); notify(`${otherName}: ${replyBody}`); setSimulating(false)
-    }, 900)
+    else window.alert(`Notification permission was not granted. Unread messages will still show inside ${PLATFORM_NAME}.`)
   }
 
   const selectContext = (value: string) => {
-    if (!value) { setContext(undefined); return }
+    if (!value) {
+      setContext(undefined)
+      return
+    }
     const [kind, id] = value.split('::')
-    if (kind === 'area') { setContext(linkedAreas.find((item) => item.id === id)); return }
+    if (kind === 'area') {
+      setContext(linkedAreas.find((item) => item.id === id))
+      return
+    }
     const item = venueInventory.find((entry) => entry.id === id)
     if (item) setContext({ kind: 'inventory', id: item.id, label: item.name })
   }
 
+  const conversation = (
+    <section className="panel conversation-panel conversation-panel--hub">
+      <div className="conversation-heading conversation-heading--hub">
+        <div className="conversation-avatar" style={{ background: venue.brandPrimary, color: '#fff' }}>{initials(profile.couple)}</div>
+        <div className="conversation-heading__copy">
+          <strong>{profile.couple || `${eventLabel[0].toUpperCase() + eventLabel.slice(1)} conversation`}</strong>
+          <span>{formatEventDate(profile.date)} · {profile.primaryEmail || `${clientDisplay} contact`}</span>
+        </div>
+        <div className="conversation-heading__actions">
+          {ownerInbox && onOpenPlanning && <button className="button button--ghost button--small" onClick={onOpenPlanning}>Open planning workspace</button>}
+        </div>
+      </div>
+
+      <div className="message-thread message-thread--hub" aria-live="polite">
+        {messages.length === 0 && (
+          <div className="message-thread-empty">
+            <strong>No messages yet.</strong>
+            <span>Start the conversation below.</span>
+          </div>
+        )}
+
+        {messages.map((message) => {
+          const mine = message.senderRole === currentRole
+          const unreadForMe = !mine && (currentRole === 'bride' ? !message.readByBride : !message.readByVenue)
+          return (
+            <article className={`message-row ${mine ? 'message-row--mine' : ''}`} key={message.id}>
+              <div className={`message-avatar ${message.senderRole === 'venue' ? 'message-avatar--venue' : ''}`}>
+                {message.senderRole === 'venue' ? initials(venue.shortName) : initials(profile.couple)}
+              </div>
+              <div className={`message-bubble ${unreadForMe ? 'message-bubble--unread' : ''}`}>
+                <div className="message-meta">
+                  <strong>{message.senderName}</strong>
+                  <span>{formatMessageTime(message.timestamp)}</span>
+                </div>
+                {message.body && <p>{message.body}</p>}
+                {message.context && (
+                  <button className="message-context" onClick={() => onOpenContext(message.context!)}>
+                    <span>{message.context.kind === 'inventory' ? '✦' : '⌖'}</span>
+                    <div>
+                      <small>{message.context.kind === 'inventory' ? 'LINKED RESOURCE' : 'LINKED FLOOR PLAN'}</small>
+                      <strong>{message.context.label}</strong>
+                    </div>
+                    <b>Open →</b>
+                  </button>
+                )}
+                {message.attachments.length > 0 && (
+                  <div className="message-attachments">
+                    {message.attachments.map((attachment) => (
+                      <a
+                        key={attachment.id}
+                        className={attachment.mimeType.startsWith('image/') ? 'message-attachment message-attachment--image' : 'message-attachment'}
+                        href={attachment.dataUrl}
+                        download={attachment.name}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {attachment.mimeType.startsWith('image/')
+                          ? <img src={attachment.dataUrl} alt={attachment.name} />
+                          : <span>📎</span>}
+                        <div>
+                          <strong>{attachment.name}</strong>
+                          <small>{Math.max(1, Math.round(attachment.size / 1024))} KB</small>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </article>
+          )
+        })}
+      </div>
+
+      <div className="message-composer">
+        <div className="composer-context-row">
+          <label>
+            <span>Link to this message</span>
+            <select value={context ? `${context.kind}::${context.id}` : ''} onChange={(event) => selectContext(event.target.value)}>
+              <option value="">No linked item</option>
+              <optgroup label="Floor plans">
+                {linkedAreas.map((item) => <option key={item.id} value={`area::${item.id}`}>{item.label}</option>)}
+              </optgroup>
+              {selectedInventory.length > 0 && (
+                <optgroup label="Selected resources">
+                  {selectedInventory.map((item) => <option key={item.id} value={`inventory::${item.id}`}>{item.name}</option>)}
+                </optgroup>
+              )}
+            </select>
+          </label>
+          <button className="button button--ghost button--small" onClick={() => fileInputRef.current?.click()} disabled={attachments.length >= MAX_ATTACHMENTS}>＋ Photo / file</button>
+          <input ref={fileInputRef} className="visually-hidden" type="file" multiple accept="image/*,.pdf,.doc,.docx,.txt" onChange={(event) => handleFiles(event.target.files)} />
+        </div>
+
+        {attachments.length > 0 && (
+          <div className="composer-attachments">
+            {attachments.map((attachment) => (
+              <button key={attachment.id} onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}>
+                <span>📎 {attachment.name}</span><b>×</b>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {attachmentError && <div className="composer-error">{attachmentError}</div>}
+        <textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={handleKeyDown} placeholder={`Message ${otherName}…`} />
+        <div className="composer-footer">
+          <span>Ctrl + Enter to send</span>
+          <button className="button button--primary" onClick={sendMessage} disabled={!draft.trim() && !attachments.length && !context}>Send message</button>
+        </div>
+      </div>
+    </section>
+  )
+
   return (
-    <main className="page-main shell messages-page">
-      <section className="page-intro page-intro--split messages-intro">
+    <main className="page-main shell messages-page messages-page--hub">
+      <section className="page-intro page-intro--split messages-intro messages-intro--hub">
         <div>
-          <p className="eyebrow">{venue.shortName.toUpperCase()} · {eventLabel.toUpperCase()} MESSAGES</p>
-          <h1>Keep the conversation with the plan.</h1>
-          <p>Questions, confirmations, photos and linked resources stay attached to this {eventLabel} instead of getting scattered across texts and email.</p>
+          <p className="eyebrow">{venue.shortName.toUpperCase()} · MESSAGES</p>
+          <h1>{ownerInbox ? 'Messages' : `Messages with ${venue.shortName}`}</h1>
+          {ownerInbox && <p>All client conversations for this venue in one inbox.</p>}
         </div>
-        <div className="message-demo-role message-demo-role--locked">
-          <span className="mini-label">SIGNED IN AS</span>
-          <strong>{currentRole === 'venue' ? `${venue.shortName} Team` : profile.couple}</strong>
-          <small>Your role follows the venue-owner or {clientLabel} access used to enter this workspace.</small>
-        </div>
+        <button className={notificationsEnabled ? 'notification-toggle active' : 'notification-toggle'} onClick={toggleNotifications}>
+          <span><b>{notificationsEnabled ? 'On' : 'Off'}</b><small>Browser notifications</small></span><i />
+        </button>
       </section>
 
-      <div className="messages-layout">
-        <section className="panel conversation-panel">
-          <div className="conversation-heading">
-            <div className="conversation-avatar" style={{ background: venue.brandPrimary, color: '#fff' }}>{venue.logoText}</div>
-            <div><strong>{profile.couple || `${eventLabel[0].toUpperCase() + eventLabel.slice(1)} conversation`}</strong><span>{venue.shortName} · {eventLabel[0].toUpperCase() + eventLabel.slice(1)} planning thread</span></div>
-            <div className="conversation-status"><span className="status-dot" /> Active</div>
-          </div>
-
-          <div className="message-thread" aria-live="polite">
-            {messages.map((message) => {
-              const mine = message.senderRole === currentRole
-              const unreadForMe = !mine && (currentRole === 'bride' ? !message.readByBride : !message.readByVenue)
-              return (
-                <article className={`message-row ${mine ? 'message-row--mine' : ''}`} key={message.id}>
-                  <div className={`message-avatar ${message.senderRole === 'venue' ? 'message-avatar--venue' : ''}`}>{message.senderRole === 'venue' ? 'V' : clientDisplay[0]}</div>
-                  <div className={`message-bubble ${unreadForMe ? 'message-bubble--unread' : ''}`}>
-                    <div className="message-meta"><strong>{message.senderName}</strong><span>{roleLabel(message.senderRole)} · {formatMessageTime(message.timestamp)}</span></div>
-                    {message.body && <p>{message.body}</p>}
-                    {message.context && <button className="message-context" onClick={() => onOpenContext(message.context!)}><span>{message.context.kind === 'inventory' ? '✦' : '⌖'}</span><div><small>{message.context.kind === 'inventory' ? 'LINKED RESOURCE' : 'LINKED FLOOR PLAN'}</small><strong>{message.context.label}</strong></div><b>Open →</b></button>}
-                    {message.attachments.length > 0 && <div className="message-attachments">{message.attachments.map((attachment) => <a key={attachment.id} className={attachment.mimeType.startsWith('image/') ? 'message-attachment message-attachment--image' : 'message-attachment'} href={attachment.dataUrl} download={attachment.name} target="_blank" rel="noreferrer">{attachment.mimeType.startsWith('image/') ? <img src={attachment.dataUrl} alt={attachment.name} /> : <span>📎</span>}<div><strong>{attachment.name}</strong><small>{Math.max(1, Math.round(attachment.size / 1024))} KB</small></div></a>)}</div>}
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-
-          <div className="message-composer">
-            <div className="composer-context-row">
-              <label><span>Link to this message</span><select value={context ? `${context.kind}::${context.id}` : ''} onChange={(e) => selectContext(e.target.value)}><option value="">No linked item</option><optgroup label="Floor plan">{linkedAreas.map((item) => <option key={item.id} value={`area::${item.id}`}>{item.label}</option>)}</optgroup>{selectedInventory.length > 0 && <optgroup label="Selected resources">{selectedInventory.map((item) => <option key={item.id} value={`inventory::${item.id}`}>{item.name}</option>)}</optgroup>}</select></label>
-              <button className="button button--ghost button--small" onClick={() => fileInputRef.current?.click()} disabled={attachments.length >= MAX_ATTACHMENTS}>＋ Photo / file</button>
-              <input ref={fileInputRef} className="visually-hidden" type="file" multiple accept="image/*,.pdf,.doc,.docx,.txt" onChange={(e) => handleFiles(e.target.files)} />
+      {ownerInbox ? (
+        <div className="owner-message-hub">
+          <aside className="panel owner-thread-list">
+            <div className="owner-thread-list__heading">
+              <div>
+                <span className="mini-label">CONVERSATIONS</span>
+                <strong>{ownerThreads.length}</strong>
+              </div>
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={`Search ${clientLabel}s`} aria-label={`Search ${clientLabel} conversations`} />
             </div>
-            {attachments.length > 0 && <div className="composer-attachments">{attachments.map((attachment) => <button key={attachment.id} onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))}><span>📎 {attachment.name}</span><b>×</b></button>)}</div>}
-            {attachmentError && <div className="composer-error">{attachmentError}</div>}
-            <textarea value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={handleKeyDown} placeholder={`Message ${otherName}…`} />
-            <div className="composer-footer"><span>Ctrl + Enter to send · {isChandelier && currentRole === 'venue' ? 'Saved to this event workspace' : isChandelier ? 'Stored in this browser until client authentication is connected' : 'Stored only in this browser preview'}</span><button className="button button--primary" onClick={sendMessage} disabled={!draft.trim() && !attachments.length && !context}>Send message</button></div>
-          </div>
-        </section>
 
-        <aside className="message-sidebar">
-          <section className="panel notification-card">
-            <p className="eyebrow">NOTIFICATIONS</p><h2>Don't miss a reply.</h2><p>Unread messages are always shown in the navigation. Browser notifications can also pop up when a reply arrives.</p>
-            <button className={notificationsEnabled ? 'notification-toggle active' : 'notification-toggle'} onClick={toggleNotifications}><span><b>{notificationsEnabled ? 'On' : 'Off'}</b><small>Browser notifications</small></span><i /></button>
-            <button className="button button--ghost full-width" onClick={simulateReply} disabled={simulating}>{simulating ? (isChandelier ? 'Sending test reply…' : 'Waiting for preview reply…') : (isChandelier ? `Test reply from ${otherName}` : `Simulate reply from ${otherName}`)}</button>
-            <small className="prototype-help">{isChandelier ? 'Test replies are simulated; real owner messages are now stored with this event.' : 'This simulation exists so the preview can show notifications without a live messaging backend.'}</small>
-          </section>
-          <section className="panel message-info-card"><p className="eyebrow">THREAD DETAILS</p><h2>{profile.couple || eventLabel[0].toUpperCase() + eventLabel.slice(1)}</h2><dl><div><dt>Venue</dt><dd>{venue.shortName}</dd></div><div><dt>{eventLabel[0].toUpperCase() + eventLabel.slice(1)} date</dt><dd>{profile.date ? new Date(`${profile.date}T12:00:00`).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }) : 'Not set'}</dd></div><div><dt>Messages</dt><dd>{messages.length}</dd></div><div><dt>Selected resources</dt><dd>{selections.reduce((sum, item) => sum + item.quantity, 0)} pieces</dd></div><div><dt>Floor plan</dt><dd>{placedItems.length ? `${placedItems.length} objects placed` : 'Not started'}</dd></div></dl></section>
-        </aside>
-      </div>
+            <div className="owner-thread-list__items">
+              {ownerThreads.map((wedding) => {
+                const last = wedding.messages[wedding.messages.length - 1]
+                const unread = unreadForVenue(wedding)
+                const active = wedding.id === activeWeddingId
+                return (
+                  <button
+                    type="button"
+                    key={wedding.id}
+                    className={active ? 'owner-thread-item owner-thread-item--active' : 'owner-thread-item'}
+                    onClick={() => onSelectWedding?.(wedding.id)}
+                  >
+                    <span className="owner-thread-item__avatar">{initials(wedding.profile.couple)}</span>
+                    <span className="owner-thread-item__body">
+                      <span className="owner-thread-item__top">
+                        <strong>{wedding.profile.couple}</strong>
+                        <small>{last ? formatMessageTime(last.timestamp) : formatEventDate(wedding.profile.date)}</small>
+                      </span>
+                      <span className="owner-thread-item__preview">
+                        {last?.body || (last?.attachments.length ? 'Attachment' : 'No messages yet')}
+                      </span>
+                      <span className="owner-thread-item__meta">{formatEventDate(wedding.profile.date)}{wedding.status === 'Cancelled' ? ' · Cancelled' : ''}</span>
+                    </span>
+                    {unread > 0 && <b className="owner-thread-item__unread">{unread}</b>}
+                  </button>
+                )
+              })}
+              {ownerThreads.length === 0 && <div className="owner-thread-list__empty">No conversations match your search.</div>}
+            </div>
+          </aside>
+
+          {conversation}
+        </div>
+      ) : conversation}
     </main>
   )
 }

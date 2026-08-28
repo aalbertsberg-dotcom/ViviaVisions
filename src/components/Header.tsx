@@ -4,7 +4,7 @@ import Logo from './Logo'
 import type { VenueProfile, WeddingWorkspace } from '../types'
 import { PLATFORM_NAME, PLATFORM_NAME_UPPER, PLATFORM_SHORT_NAME, POWERED_BY_PLATFORM } from '../config/platform'
 
-export type PageKey = 'home' | 'venues' | 'for-venues' | 'signin' | 'venue' | 'catalog' | 'wedding' | 'planner' | 'media' | 'ai-preview' | 'messages' | 'calendar' | 'summary' | 'admin' | 'platform'
+export type PageKey = 'home' | 'venues' | 'for-venues' | 'signin' | 'venue' | 'catalog' | 'wedding' | 'planner' | 'media' | 'ai-preview' | 'messages' | 'calendar' | 'summary' | 'admin' | 'manage-events' | 'platform'
 
 type HeaderProps = {
   page: PageKey
@@ -22,7 +22,7 @@ type HeaderProps = {
   onOwnerLogout: () => void
   onCoupleLogout: () => void
   onPlatformLogout: () => void
-  onResetPreview: () => void
+  onResetPreview: () => void | Promise<void>
 }
 
 type NavItem = { key: PageKey; label: string; description?: string }
@@ -82,6 +82,7 @@ export default function Header({
     { key: 'messages', label: 'Messages' },
   ]
   const ownerMore: NavItem[] = [
+    { key: 'manage-events', label: 'Manage Events', description: 'Cancel, restore or delete workspaces safely' },
     { key: 'wedding', label: `Active ${eventLabel}`, description: 'Details, package and planning checklist' },
     { key: 'planner', label: '2D Designer', description: 'Build the source-of-truth layout first' },
     { key: 'media', label: 'Media Library', description: 'Venue photos, video, files and AI references' },
@@ -100,7 +101,7 @@ export default function Header({
     { key: 'venue', label: `${activeVenue.shortName} home`, description: 'Return to your venue page' },
   ]
   const platformNav: NavItem[] = [
-    { key: 'platform', label: 'Admin POC' },
+    { key: 'platform', label: 'Admin' },
     { key: 'venues', label: 'Venue Accounts' },
     { key: 'for-venues', label: 'Requests' },
   ]
@@ -115,7 +116,7 @@ export default function Header({
         <div className="app-header__brand">
           {mode === 'public' && !isVenuePublicPage && <button className="brand-button" onClick={() => go('home')} aria-label={`${PLATFORM_NAME} home`}><Logo /></button>}
           {isVenuePublicPage && <VenueBrand venue={activeVenue} onClick={() => go('venue')} onPoweredClick={() => go('home')} subtitle={POWERED_BY_PLATFORM} />}
-          {mode === 'platform' && <button className="platform-brand" type="button" onClick={() => go('platform')}><Logo compact /><span><strong>{PLATFORM_NAME} Admin</strong><small>Proof of Concept</small></span></button>}
+          {mode === 'platform' && <button className="platform-brand" type="button" onClick={() => go('platform')}><Logo compact /><span><strong>{PLATFORM_NAME} Admin</strong><small>Platform Operations</small></span></button>}
           {mode === 'owner' && <VenueBrand venue={activeVenue} onClick={() => go('admin')} onPoweredClick={() => go('home')} subtitle={`Owner Portal · ${POWERED_BY_PLATFORM}`} />}
           {mode === 'couple' && <VenueBrand venue={activeVenue} onClick={() => go('wedding')} onPoweredClick={() => go('home')} subtitle={`${eventLabel[0].toUpperCase() + eventLabel.slice(1)} Portal · ${POWERED_BY_PLATFORM}`} />}
         </div>
@@ -138,7 +139,7 @@ export default function Header({
 
       {menuOpen && <button className="nav-menu-backdrop" aria-label="Close menu" onClick={() => setMenuOpen(false)} />}
       <aside className={menuOpen ? 'clean-drawer clean-drawer--open' : 'clean-drawer'} aria-label="Application menu">
-        <div className="clean-drawer__heading"><div><span className="mini-label">{mode === 'owner' || mode === 'couple' ? activeVenue.shortName.toUpperCase() : PLATFORM_NAME_UPPER}</span><strong>{mode === 'owner' ? 'Owner Portal' : mode === 'couple' ? activeWeddingName : mode === 'platform' ? 'Admin · Proof of Concept' : PLATFORM_NAME}</strong></div><button type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button></div>
+        <div className="clean-drawer__heading"><div><span className="mini-label">{mode === 'owner' || mode === 'couple' ? activeVenue.shortName.toUpperCase() : PLATFORM_NAME_UPPER}</span><strong>{mode === 'owner' ? 'Owner Portal' : mode === 'couple' ? activeWeddingName : mode === 'platform' ? 'Platform Admin' : PLATFORM_NAME}</strong></div><button type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu">×</button></div>
 
         {mode === 'owner' && <div className="clean-drawer__switcher"><label htmlFor="drawer-active-wedding">Active {eventLabel}</label><select id="drawer-active-wedding" value={activeWeddingId} onChange={(event) => onSelectWedding(event.target.value)}>{sortedWeddings.map((wedding) => <option value={wedding.id} key={wedding.id}>{wedding.profile.couple} · {wedding.profile.date}</option>)}</select><small>All {eventLabel}-specific tools follow this selection inside {activeVenue.shortName}.</small></div>}
 
@@ -146,9 +147,9 @@ export default function Header({
 
         <div className="clean-drawer__footer">
           {mode === 'owner' && <button onClick={() => { setMenuOpen(false); onOwnerLogout() }}>Sign out of {activeVenue.shortName}</button>}
-          {mode === 'platform' && <button onClick={() => { setMenuOpen(false); onPlatformLogout() }}>Sign out of {PLATFORM_SHORT_NAME} Admin POC</button>}
+          {mode === 'platform' && <button onClick={() => { setMenuOpen(false); onPlatformLogout() }}>Sign out of {PLATFORM_SHORT_NAME} Admin</button>}
           {mode === 'public' && <button onClick={() => go('signin')}>Sign in</button>}
-          {(mode === 'owner' || mode === 'platform') && <button className="clean-drawer__reset" onClick={() => { setMenuOpen(false); onResetPreview() }}>{mode === 'owner' && activeVenue.id === 'venue-chandelier-oaks' ? 'Reset local workspace data' : 'Reset preview data'}</button>}
+          {(mode === 'owner' || mode === 'platform') && <button className="clean-drawer__reset" onClick={() => { setMenuOpen(false); onResetPreview() }}>{mode === 'owner' && !activeVenue.isSample ? 'Reset active workspace' : 'Reset demo data'}</button>}
         </div>
       </aside>
 

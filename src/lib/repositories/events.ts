@@ -48,8 +48,9 @@ function workspaceStatus(value: unknown): WeddingStatus {
     case 'ready':
     case 'completed':
       return 'Ready'
-    case 'not_started':
     case 'cancelled':
+      return 'Cancelled'
+    case 'not_started':
     default:
       return 'Not started'
   }
@@ -61,6 +62,8 @@ function databaseStatus(value: WeddingStatus) {
       return 'designing'
     case 'Ready':
       return 'ready'
+    case 'Cancelled':
+      return 'cancelled'
     case 'Not started':
     default:
       return 'not_started'
@@ -358,6 +361,7 @@ export async function listVenueEventWorkspaces(
       accessCode: text(metadata.preview_access_code, previous?.accessCode ?? ''),
       status: workspaceStatus(row.status),
       paymentStepsCompleted: Number(row.payment_steps_completed ?? 0),
+      deletedAt: text(metadata.soft_deleted_at) || undefined,
       profile: {
         couple: text(linkedClient?.display_name, text(row.title)),
         date: text(row.event_date),
@@ -601,23 +605,44 @@ export async function saveEventLayoutItems(eventId: string, placedItems: PlacedI
     grouped.set(areaKey, current)
   }
 
+  const layoutRows: Array<{
+    id: string
+    event_id: string
+    venue_space_id: string | null
+    name: string
+    is_primary: boolean
+  }> = []
+
+  const itemsByLayout = new Map<string, PlacedItem[]>()
   let layoutIndex = 0
+
   for (const [areaKey, items] of grouped) {
+    const layoutId = crypto.randomUUID()
     const space = spacesByKey.get(areaKey)
-    const { data: layout, error: layoutError } = await client
-      .from('layouts')
-      .insert({
-        event_id: eventId,
-        venue_space_id: space?.id ?? null,
-        name: space?.name ? `${space.name} Layout` : 'Event Layout',
-        is_primary: layoutIndex === 0,
-      })
-      .select('id')
-      .single()
 
-    if (layoutError) throw layoutError
+    layoutRows.push({
+      id: layoutId,
+      event_id: eventId,
+      venue_space_id: space?.id ?? null,
+      name: space?.name ? space.name + ' Layout' : 'Event Layout',
+      is_primary: layoutIndex === 0,
+    })
 
-    const rows = items.map((item) => ({
+    itemsByLayout.set(layoutId, items)
+    layoutIndex += 1
+  }
+
+  const { error: layoutError } = await client
+    .from('layouts')
+    .insert(layoutRows)
+
+  if (layoutError) throw layoutError
+
+  const itemRows = layoutRows.flatMap((layout) => {
+    const items = itemsByLayout.get(layout.id) ?? []
+
+    return items.map((item) => ({
+      id: crypto.randomUUID(),
       layout_id: layout.id,
       inventory_item_id: item.inventoryItemId ? inventoryByKey.get(item.inventoryItemId) ?? null : null,
       parent_item_id: null,
@@ -631,19 +656,17 @@ export async function saveEventLayoutItems(eventId: string, placedItems: PlacedI
         app_id: item.id,
         parent_app_id: item.parentTableId ?? null,
         inventory_external_key: item.inventoryItemId ?? null,
-        area_external_key: (item.areaId ?? areaKey) || null,
+        area_external_key: item.areaId ?? null,
       },
     }))
+  })
 
-    if (rows.length) {
-      const { error: itemsError } = await client
-        .from('layout_items')
-        .insert(rows)
+  if (itemRows.length) {
+    const { error: itemsError } = await client
+      .from('layout_items')
+      .insert(itemRows)
 
-      if (itemsError) throw itemsError
-    }
-
-    layoutIndex += 1
+    if (itemsError) throw itemsError
   }
 
   const { error: statusError } = await client
@@ -689,4 +712,144 @@ export async function saveEventMessages(eventId: string, messages: WeddingMessag
     .insert(rows)
 
   if (error) throw error
+}
+
+
+
+
+async function eventLifecycleRow(eventId: string) {
+  const client = requireSupabase()
+  const { data, error } = await client
+    .from('events')
+    .select('status, metadata')
+    .eq('id', eventId)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) throw new Error('The event was not found.')
+  return { status: String(data.status ?? 'not_started'), metadata: asRecord(data.metadata) }
+}
+
+export async function cancelVenueEvent(eventId: string) {
+  const client = requireSupabase()
+  const current = await eventLifecycleRow(eventId)
+  if (current.status === 'cancelled') return
+
+  const { error } = await client
+    .from('events')
+    .update({
+      status: 'cancelled',
+      metadata: { ...current.metadata, pre_cancel_status: current.status },
+    })
+    .eq('id', eventId)
+
+  if (error) throw error
+}
+
+export async function reopenVenueEvent(eventId: string) {
+  const client = requireSupabase()
+  const current = await eventLifecycleRow(eventId)
+  const metadata = { ...current.metadata }
+  const previousStatus = typeof metadata.pre_cancel_status === 'string' ? metadata.pre_cancel_status : 'not_started'
+  delete metadata.pre_cancel_status
+
+  const { error } = await client
+    .from('events')
+    .update({ status: previousStatus, metadata })
+    .eq('id', eventId)
+
+  if (error) throw error
+}
+
+export async function softDeleteVenueEvent(eventId: string) {
+  const client = requireSupabase()
+  const current = await eventLifecycleRow(eventId)
+  if (typeof current.metadata.soft_deleted_at === 'string' && current.metadata.soft_deleted_at) return
+
+  const { error } = await client
+    .from('events')
+    .update({
+      metadata: {
+        ...current.metadata,
+        soft_deleted_at: new Date().toISOString(),
+        pre_delete_status: current.status,
+      },
+    })
+    .eq('id', eventId)
+
+  if (error) throw error
+}
+
+export async function restoreVenueEvent(eventId: string) {
+  const client = requireSupabase()
+  const current = await eventLifecycleRow(eventId)
+  const metadata = { ...current.metadata }
+  delete metadata.soft_deleted_at
+  delete metadata.pre_delete_status
+
+  const { error } = await client
+    .from('events')
+    .update({ metadata })
+    .eq('id', eventId)
+
+  if (error) throw error
+}
+
+export async function permanentDeleteVenueEvent(eventId: string) {
+  const client = requireSupabase()
+  const current = await eventLifecycleRow(eventId)
+  const deletedAt = typeof current.metadata.soft_deleted_at === 'string' ? current.metadata.soft_deleted_at : ''
+  if (!deletedAt) throw new Error('Move the event to Trash before permanently deleting it.')
+
+  const deletedTime = new Date(deletedAt).getTime()
+  const retentionMs = 30 * 24 * 60 * 60 * 1000
+  if (!Number.isFinite(deletedTime) || Date.now() - deletedTime < retentionMs) {
+    throw new Error('This event is still inside the 30-day recovery period.')
+  }
+
+  const { client_id: clientId } = await eventVenue(eventId)
+
+  const { error: eventDeleteError } = await client
+    .from('events')
+    .delete()
+    .eq('id', eventId)
+
+  if (eventDeleteError) throw eventDeleteError
+
+  if (clientId) {
+    const { data: remainingEvents, error: remainingError } = await client
+      .from('events')
+      .select('id')
+      .eq('client_id', clientId)
+      .limit(1)
+
+    if (remainingError) throw remainingError
+
+    if (!remainingEvents?.length) {
+      const { error: clientDeleteError } = await client
+        .from('clients')
+        .delete()
+        .eq('id', clientId)
+
+      if (clientDeleteError) throw clientDeleteError
+    }
+  }
+}
+
+export async function resetEventPlanning(eventId: string) {
+  const client = requireSupabase()
+
+  const { error: selectionError } = await client
+    .from('event_selections')
+    .delete()
+    .eq('event_id', eventId)
+
+  if (selectionError) throw selectionError
+
+  const { error: layoutError } = await client
+    .from('layouts')
+    .delete()
+    .eq('event_id', eventId)
+
+  if (layoutError) throw layoutError
 }

@@ -15,11 +15,12 @@ import Messages from './pages/Messages'
 import Calendar from './pages/Calendar'
 import SetupSheet from './pages/SetupSheet'
 import Admin from './pages/Admin'
+import ManageEvents from './pages/ManageEvents'
 import PlatformAdmin from './pages/PlatformAdmin'
 import { PLATFORM_NAME, POWERED_BY_PLATFORM, platformConfig } from './config/platform'
 import { supabase } from './lib/supabase'
 import { getVenueStaffAccessBySlug, signInWithPassword, signOut as signOutSupabase } from './lib/repositories/auth'
-import { createVenueEventWorkspace, listVenueEventWorkspaces, saveEventLayoutItems, saveEventMessages, saveEventProfile, setEventSelection } from './lib/repositories/events'
+import { cancelVenueEvent, createVenueEventWorkspace, listVenueEventWorkspaces, permanentDeleteVenueEvent, reopenVenueEvent, resetEventPlanning, restoreVenueEvent, saveEventLayoutItems, saveEventMessages, saveEventProfile, setEventSelection, softDeleteVenueEvent } from './lib/repositories/events'
 import { loadVenueConfigFromSupabase } from './lib/repositories/venueConfig'
 import CoupleAccess from './pages/CoupleAccess'
 import { applyVenueConfigOverride, chandelierOaks, foundryRivergate, itemAllowedForTier, juniperStone, packageById, venueConfigById, venueConfigBySlug, venueConfigs } from './data'
@@ -71,7 +72,7 @@ const previewWeddings: WeddingWorkspace[] = [
 ]
 
 type RouteState = { page: PageKey; coupleSlug: string | null; venueSlug: string | null }
-const scopedPages: PageKey[] = ['catalog','wedding','planner','media','ai-preview','messages','calendar','summary']
+const scopedPages: PageKey[] = ['catalog','wedding','planner','media','ai-preview','messages','calendar','summary','manage-events']
 
 function parseRoute(): RouteState {
   const value = window.location.hash.replace(/^#\/?/, '')
@@ -99,6 +100,20 @@ function loadWeddings() {
   return previewWeddings.map((seed) => byId.get(seed.id) ?? seed).concat(saved.filter((wedding) => !previewWeddings.some((seed) => seed.id === wedding.id)))
 }
 
+async function withOperationTimeout<T>(promise: PromiseLike<T>, label: string, ms = 15000): Promise<T> {
+  let timer: number | undefined
+  try {
+    return await Promise.race([
+      Promise.resolve(promise),
+      new Promise<never>((_, reject) => {
+        timer = window.setTimeout(() => reject(new Error(`${label} timed out. Please try again.`)), ms)
+      }),
+    ])
+  } finally {
+    if (timer !== undefined) window.clearTimeout(timer)
+  }
+}
+
 export default function App() {
   const initialRoute = parseRoute()
   const initialVenue = initialRoute.venueSlug ? venueConfigBySlug(initialRoute.venueSlug) : venueConfigById(readLocal('venueVisions.saas.activeVenueId', chandelierOaks.id))
@@ -119,7 +134,8 @@ export default function App() {
   const layoutSaveTimerRef = useRef<number | null>(null)
 
   const activeVenue = venueConfigById(activeVenueId)
-  const venueWeddings = useMemo(() => weddings.filter((wedding) => wedding.venueId === activeVenueId), [weddings, activeVenueId])
+  const venueWeddingsAll = useMemo(() => weddings.filter((wedding) => wedding.venueId === activeVenueId), [weddings, activeVenueId])
+  const venueWeddings = useMemo(() => venueWeddingsAll.filter((wedding) => !wedding.deletedAt && wedding.status !== 'Cancelled'), [venueWeddingsAll])
   const activeWedding = venueWeddings.find((wedding) => wedding.id === activeWeddingId) ?? venueWeddings[0]
   const selections = activeWedding?.selections ?? []
   const profile = activeWedding?.profile
@@ -356,7 +372,7 @@ export default function App() {
       layoutSaveTimerRef.current = window.setTimeout(() => {
         void saveEventLayoutItems(eventId, nextItems).catch((error) => {
           console.error('Unable to save the layout to Supabase.', error)
-          window.alert('The layout changed on screen, but it could not be saved to the database. Please refresh and try again.')
+          window.alert(`The layout could not be saved: ${error instanceof Error ? error.message : 'Unknown database error'}`)
         })
       }, 650)
     }
@@ -464,8 +480,102 @@ export default function App() {
     return null
   }
 
+  const refreshDatabaseVenueEvents = async () => {
+    const refreshed = await listVenueEventWorkspaces(activeVenue.profile.slug, activeVenueId, venueWeddingsAll)
+    setWeddings((current) => [
+      ...current.filter((wedding) => wedding.venueId !== activeVenueId),
+      ...refreshed,
+    ])
+    return refreshed
+  }
+
+  const cancelManagedEvent = async (id: string): Promise<string | null> => {
+    try {
+      if (databaseOwnerSession) {
+        await cancelVenueEvent(id)
+        await refreshDatabaseVenueEvents()
+      } else {
+        setWeddings((current) => current.map((wedding) => wedding.id === id ? { ...wedding, status: 'Cancelled' as WeddingStatus } : wedding))
+      }
+      return null
+    } catch (error) {
+      console.error('Unable to cancel the event.', error)
+      return error instanceof Error ? error.message : 'The event could not be cancelled.'
+    }
+  }
+
+  const reopenManagedEvent = async (id: string): Promise<string | null> => {
+    try {
+      if (databaseOwnerSession) {
+        await reopenVenueEvent(id)
+        await refreshDatabaseVenueEvents()
+      } else {
+        setWeddings((current) => current.map((wedding) => {
+          if (wedding.id !== id) return wedding
+          const nextStatus: WeddingStatus = wedding.selections.length || wedding.placedItems.length ? 'Designing' : 'Not started'
+          return { ...wedding, status: nextStatus }
+        }))
+      }
+      return null
+    } catch (error) {
+      console.error('Unable to reopen the event.', error)
+      return error instanceof Error ? error.message : 'The event could not be reopened.'
+    }
+  }
+
+  const trashManagedEvent = async (id: string): Promise<string | null> => {
+    try {
+      if (databaseOwnerSession) {
+        await softDeleteVenueEvent(id)
+        await refreshDatabaseVenueEvents()
+      } else {
+        const deletedAt = new Date().toISOString()
+        setWeddings((current) => current.map((wedding) => wedding.id === id ? { ...wedding, deletedAt } : wedding))
+      }
+      return null
+    } catch (error) {
+      console.error('Unable to move the event to Trash.', error)
+      return error instanceof Error ? error.message : 'The event could not be moved to Trash.'
+    }
+  }
+
+  const restoreManagedEvent = async (id: string): Promise<string | null> => {
+    try {
+      if (databaseOwnerSession) {
+        await restoreVenueEvent(id)
+        await refreshDatabaseVenueEvents()
+      } else {
+        setWeddings((current) => current.map((wedding) => wedding.id === id ? { ...wedding, deletedAt: undefined } : wedding))
+      }
+      return null
+    } catch (error) {
+      console.error('Unable to restore the event.', error)
+      return error instanceof Error ? error.message : 'The event could not be restored.'
+    }
+  }
+
+  const permanentlyDeleteManagedEvent = async (id: string): Promise<string | null> => {
+    try {
+      if (databaseOwnerSession) {
+        await permanentDeleteVenueEvent(id)
+        await refreshDatabaseVenueEvents()
+      } else {
+        const target = weddings.find((wedding) => wedding.id === id)
+        if (!target?.deletedAt) return 'Move the event to Trash first.'
+        const retentionMs = 30 * 24 * 60 * 60 * 1000
+        if (Date.now() - new Date(target.deletedAt).getTime() < retentionMs) return 'This event is still inside the 30-day recovery period.'
+        setWeddings((current) => current.filter((wedding) => wedding.id !== id))
+      }
+      return null
+    } catch (error) {
+      console.error('Unable to permanently delete the event.', error)
+      return error instanceof Error ? error.message : 'The event could not be permanently deleted.'
+    }
+  }
+
   const authenticateOwner = async (emailOrCode: string, password?: string): Promise<{ ok: boolean; error?: string }> => {
     const usesRealAuth = activeVenue.profile.slug === 'chandelier-oaks'
+
     if (!usesRealAuth) {
       if (emailOrCode.trim() !== activeVenue.ownerAccessCode) return { ok: false, error: 'Incorrect preview password.' }
       setOwnerAuthenticatedVenueId(activeVenueId)
@@ -475,39 +585,79 @@ export default function App() {
 
     if (!supabase) return { ok: false, error: 'Supabase is not configured on this deployment.' }
 
+    const email = emailOrCode.trim().toLowerCase()
+    if (!email) return { ok: false, error: 'Enter your email address.' }
+    if (!password) return { ok: false, error: 'Enter your password.' }
+
     try {
-      const login = await signInWithPassword(emailOrCode.trim(), password ?? '')
-      if (!login.user?.id) {
+      const sessionResult = await withOperationTimeout(
+        supabase.auth.getSession(),
+        'Checking your current session',
+      )
+
+      const existingUser = sessionResult.data.session?.user ?? null
+      const existingEmail = (existingUser?.email ?? '').toLowerCase()
+      const reuseCurrentSession = Boolean(existingUser?.id && existingEmail === email)
+
+      let user = existingUser
+
+      if (!reuseCurrentSession) {
+        const login = await withOperationTimeout(
+          signInWithPassword(email, password),
+          'Signing in',
+        )
+        user = login.user ?? null
+      }
+
+      if (!user?.id) {
         setOwnerAuthenticatedVenueId(null)
         return { ok: false, error: 'Unable to identify the signed-in account.' }
       }
-      const access = await getVenueStaffAccessBySlug(activeVenue.profile.slug, login.user.id)
+
+      const access = await withOperationTimeout(
+        getVenueStaffAccessBySlug(activeVenue.profile.slug, user.id),
+        'Checking venue access',
+      )
+
       if (!access.allowed) {
-        await signOutSupabase()
+        if (!reuseCurrentSession) {
+          try { await withOperationTimeout(signOutSupabase(), 'Signing out') } catch { /* preserve the useful access error */ }
+        }
         setOwnerAuthenticatedVenueId(null)
-        return { ok: false, error: `This account does not have access to ${activeVenue.profile.shortName}.` }
+        return { ok: false, error: `This account does not have owner or staff access to ${activeVenue.profile.shortName}.` }
       }
 
-      const databaseWeddings = await listVenueEventWorkspaces(
-        activeVenue.profile.slug,
-        activeVenueId,
-        weddings.filter((wedding) => wedding.venueId === activeVenueId),
+      const databaseWeddings = await withOperationTimeout(
+        listVenueEventWorkspaces(
+          activeVenue.profile.slug,
+          activeVenueId,
+          weddings.filter((wedding) => wedding.venueId === activeVenueId),
+        ),
+        'Loading venue workspaces',
+        20000,
       )
 
       setWeddings((current) => [
         ...current.filter((wedding) => wedding.venueId !== activeVenueId),
         ...databaseWeddings,
       ])
-      if (databaseWeddings[0]) setActiveWeddingId(databaseWeddings[0].id)
+
+      const firstActive = databaseWeddings.find((wedding) => !wedding.deletedAt && wedding.status !== 'Cancelled')
+      if (firstActive) setActiveWeddingId(firstActive.id)
 
       setOwnerAuthenticatedVenueId(activeVenueId)
       setCoupleAuthenticatedWeddingId(null)
       return { ok: true }
     } catch (error) {
+      console.error('Unable to authenticate venue owner.', error)
       setOwnerAuthenticatedVenueId(null)
-      return { ok: false, error: error instanceof Error ? error.message : 'Unable to sign in.' }
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : 'Unable to sign in.',
+      }
     }
   }
+
   const authenticatePlatform = async (email: string, password: string): Promise<{ ok: boolean; error?: string }> => {
     if (!supabase) return { ok: false, error: 'Supabase is not configured on this deployment.' }
     try {
@@ -536,15 +686,31 @@ export default function App() {
   const unreadMessages = useMemo(() => messages.filter((message) => { const role: MessageRole = ownerAuthenticated ? 'venue' : 'bride'; if (message.senderRole === role) return false; return role === 'bride' ? !message.readByBride : !message.readByVenue }).length, [messages, ownerAuthenticated])
   const protectedPage = page === 'wedding' || page === 'planner' || page === 'media' || page === 'ai-preview' || page === 'messages' || page === 'summary'
   const showCoupleGate = protectedPage && !hasWorkspaceAccess
-  const showCalendarGate = page === 'calendar' && !ownerAuthenticated
+  const showOwnerGate = (page === 'calendar' || page === 'manage-events') && !ownerAuthenticated
 
-  const resetPreview = () => {
-    if (!window.confirm('Reset all venue showcases, event workspaces, uploads and saved venue-request examples?')) return
-    setWeddings(previewWeddings); setActiveVenueId(chandelierOaks.id); setActiveWeddingId('wedding-sarah-john'); setNotificationsEnabled(false); setOwnerAuthenticatedVenueId(null); setPlatformAuthenticated(false); setCoupleAuthenticatedWeddingId(null); setVenueLeads([])
-    Object.keys(localStorage).filter((key) => key.startsWith('venueVisions.saas.') || key.startsWith('venueVisions.poc.')).forEach((key) => localStorage.removeItem(key))
-    Object.keys(sessionStorage).filter((key) => key.startsWith('venueVisions.saas.')).forEach((key) => sessionStorage.removeItem(key))
-    try { indexedDB.deleteDatabase('venueVisionsMediaDemo') } catch { /* preview cleanup only */ }
-    window.location.hash = '#/'; setPage('home')
+  const resetPreview = async () => {
+    if (ownerAuthenticated && activeWedding && !activeVenue.profile.isSample) {
+      if (!window.confirm(`Reset planning for ${activeWedding.profile.couple}? Resource selections and 2D layouts will be cleared. Event details and messages will stay.`)) return
+      try {
+        if (databaseOwnerSession) await resetEventPlanning(activeWedding.id)
+        setWeddings((current) => current.map((wedding) => wedding.id === activeWedding.id
+          ? { ...wedding, selections: [], placedItems: [], status: wedding.status === 'Cancelled' ? wedding.status : 'Not started' as WeddingStatus }
+          : wedding))
+      } catch (error) {
+        console.error('Unable to reset workspace planning.', error)
+        window.alert('The workspace could not be reset. Please refresh and try again.')
+      }
+      return
+    }
+
+    if (!window.confirm('Reset the demo venue data back to its starting state?')) return
+    const demoVenueIds = new Set(venueConfigs.filter((config) => config.profile.isSample).map((config) => config.profile.id))
+    const demoWeddings = previewWeddings.filter((wedding) => demoVenueIds.has(wedding.venueId))
+    setWeddings((current) => [...current.filter((wedding) => !demoVenueIds.has(wedding.venueId)), ...demoWeddings])
+    setNotificationsEnabled(false)
+    setCoupleAuthenticatedWeddingId(null)
+    Object.keys(localStorage).filter((key) => key.startsWith('venueVisions.poc.')).forEach((key) => localStorage.removeItem(key))
+    try { indexedDB.deleteDatabase('venueVisionsMediaDemo') } catch { /* demo cleanup only */ }
   }
 
   return (
@@ -552,21 +718,22 @@ export default function App() {
       <Header page={page} onNavigate={navigate} selectionCount={selectionCount} unreadMessages={unreadMessages} activeWeddingName={profile?.couple ?? ''} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} activeVenue={activeVenue.profile} ownerAuthenticated={ownerAuthenticated} coupleAuthenticated={coupleAuthenticatedWeddingId === activeWedding?.id} platformAuthenticated={platformAuthenticated} onSelectWedding={selectActiveWedding} onOwnerLogout={logoutOwner} onCoupleLogout={logoutCouple} onPlatformLogout={logoutPlatform} onResetPreview={resetPreview} />
 
       {showCoupleGate && activeWedding && <CoupleAccess wedding={activeWedding} venueId={activeVenueId} onSubmitCode={authenticateCouple} onBackHome={() => navigate('venue')} />}
-      {showCalendarGate && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={ownerAuthenticated} authLoading={ownerAuthLoading} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} />}
+      {showOwnerGate && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={ownerAuthenticated} authLoading={ownerAuthLoading} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} />}
 
-      {!showCoupleGate && !showCalendarGate && page === 'home' && <Home onNavigate={navigate} onOpenVenue={openVenueBySlug} venues={venueConfigs} />}
-      {!showCoupleGate && !showCalendarGate && page === 'venues' && <Venues venues={venueConfigs} weddings={weddings} onOpenVenue={openVenueBySlug} onOpenCouple={openCoupleBySlug} onForVenues={() => navigate('for-venues')} />}
-      {!showCoupleGate && !showCalendarGate && page === 'for-venues' && <ForVenues leads={venueLeads} setLeads={setVenueLeads} onBackHome={() => navigate('home')} onViewVenueDemo={() => navigate('venues')} />}
-      {!showCoupleGate && !showCalendarGate && page === 'signin' && <SignIn venues={venueConfigs} activeVenueId={activeVenueId} onSelectVenue={selectVenue} onVenueOwner={() => navigate('admin')} onCouple={openFirstCouple} onBackHome={() => navigate('home')} />}
-      {!showCoupleGate && !showCalendarGate && page === 'venue' && <VenuePortal venueId={activeVenueId} weddings={venueWeddings} onNavigate={navigate} onOpenCouple={openCoupleByWeddingId} />}
-      {!showCoupleGate && !showCalendarGate && page === 'catalog' && <Catalog venueId={activeVenueId} selections={selections} onSetQuantity={setQuantity} canEdit={hasWorkspaceAccess} onRequireAccess={openFirstCouple} packageTier={packageInfo.tier} packageName={packageInfo.name} />}
-      {!showCoupleGate && !showCalendarGate && page === 'wedding' && profile && activeWedding && <Wedding venueId={activeVenueId} profile={profile} selections={selections} unreadMessages={unreadMessages} paymentStepsCompleted={activeWedding.paymentStepsCompleted} onProfileChange={updateProfile} onSetQuantity={setQuantity} onNavigate={navigate} ownerMode={ownerAuthenticated} />}
-      {!showCoupleGate && !showCalendarGate && page === 'planner' && profile && <Planner venueId={activeVenueId} selections={selections} placedItems={placedItems} setPlacedItems={setPlacedItems} onSetQuantity={setQuantity} packageTier={packageInfo.tier} preferredAreaId={profile.receptionArea || activeVenue.areas[0]?.id} onNavigate={navigate} />}
-      {!showCoupleGate && !showCalendarGate && page === 'media' && activeWedding && <MediaLibrary venueId={activeVenueId} weddingId={activeWedding.id} weddingName={activeWedding.profile.couple} ownerMode={ownerAuthenticated} onNavigate={navigate} />}
-      {!showCoupleGate && !showCalendarGate && page === 'ai-preview' && activeWedding && <AiPreview venueId={activeVenueId} weddingId={activeWedding.id} weddingName={activeWedding.profile.couple} preferredAreaId={activeWedding.profile.receptionArea || activeVenue.areas[0]?.id} placedItems={placedItems} selections={selections} ownerMode={ownerAuthenticated} onNavigate={navigate} />}
-      {!showCoupleGate && !showCalendarGate && page === 'messages' && profile && <Messages venueId={activeVenueId} profile={profile} selections={selections} placedItems={placedItems} messages={messages} setMessages={setMessages} currentRole={ownerAuthenticated ? 'venue' : 'bride'} notificationsEnabled={notificationsEnabled} setNotificationsEnabled={setNotificationsEnabled} onOpenContext={openMessageContext} />}
-      {!showCoupleGate && !showCalendarGate && page === 'summary' && activeWedding && <SetupSheet venueId={activeVenueId} wedding={activeWedding} />}
-      {!showCoupleGate && !showCalendarGate && page === 'calendar' && ownerAuthenticated && <Calendar venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} />}
+      {!showCoupleGate && !showOwnerGate && page === 'home' && <Home onNavigate={navigate} onOpenVenue={openVenueBySlug} venues={venueConfigs} />}
+      {!showCoupleGate && !showOwnerGate && page === 'venues' && <Venues venues={venueConfigs} weddings={weddings} onOpenVenue={openVenueBySlug} onOpenCouple={openCoupleBySlug} onForVenues={() => navigate('for-venues')} />}
+      {!showCoupleGate && !showOwnerGate && page === 'for-venues' && <ForVenues leads={venueLeads} setLeads={setVenueLeads} onBackHome={() => navigate('home')} onViewVenueDemo={() => navigate('venues')} />}
+      {!showCoupleGate && !showOwnerGate && page === 'signin' && <SignIn venues={venueConfigs} activeVenueId={activeVenueId} onSelectVenue={selectVenue} onVenueOwner={() => navigate('admin')} onCouple={openFirstCouple} onBackHome={() => navigate('home')} />}
+      {!showCoupleGate && !showOwnerGate && page === 'venue' && <VenuePortal venueId={activeVenueId} weddings={venueWeddings} onNavigate={navigate} onOpenCouple={openCoupleByWeddingId} />}
+      {!showCoupleGate && !showOwnerGate && page === 'catalog' && <Catalog venueId={activeVenueId} selections={selections} onSetQuantity={setQuantity} canEdit={hasWorkspaceAccess} onRequireAccess={openFirstCouple} packageTier={packageInfo.tier} packageName={packageInfo.name} onNavigate={navigate} />}
+      {!showCoupleGate && !showOwnerGate && page === 'wedding' && profile && activeWedding && <Wedding venueId={activeVenueId} profile={profile} selections={selections} unreadMessages={unreadMessages} paymentStepsCompleted={activeWedding.paymentStepsCompleted} onProfileChange={updateProfile} onSetQuantity={setQuantity} onNavigate={navigate} ownerMode={ownerAuthenticated} />}
+      {!showCoupleGate && !showOwnerGate && page === 'planner' && profile && <Planner venueId={activeVenueId} selections={selections} placedItems={placedItems} setPlacedItems={setPlacedItems} onSetQuantity={setQuantity} packageTier={packageInfo.tier} preferredAreaId={profile.receptionArea || activeVenue.areas[0]?.id} onNavigate={navigate} />}
+      {!showCoupleGate && !showOwnerGate && page === 'media' && activeWedding && <MediaLibrary venueId={activeVenueId} weddingId={activeWedding.id} weddingName={activeWedding.profile.couple} ownerMode={ownerAuthenticated} onNavigate={navigate} />}
+      {!showCoupleGate && !showOwnerGate && page === 'ai-preview' && activeWedding && <AiPreview venueId={activeVenueId} weddingId={activeWedding.id} weddingName={activeWedding.profile.couple} preferredAreaId={activeWedding.profile.receptionArea || activeVenue.areas[0]?.id} placedItems={placedItems} selections={selections} ownerMode={ownerAuthenticated} onNavigate={navigate} />}
+      {!showCoupleGate && !showOwnerGate && page === 'messages' && profile && <Messages venueId={activeVenueId} profile={profile} selections={selections} placedItems={placedItems} messages={messages} setMessages={setMessages} currentRole={ownerAuthenticated ? 'venue' : 'bride'} notificationsEnabled={notificationsEnabled} setNotificationsEnabled={setNotificationsEnabled} onOpenContext={openMessageContext} weddings={ownerAuthenticated ? venueWeddings : undefined} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenPlanning={() => activeWedding && openWedding(activeWedding.id, 'wedding')} />}
+      {!showCoupleGate && !showOwnerGate && page === 'summary' && activeWedding && <SetupSheet venueId={activeVenueId} wedding={activeWedding} />}
+      {!showCoupleGate && !showOwnerGate && page === 'manage-events' && ownerAuthenticated && <ManageEvents eventLabel={activeVenue.profile.eventLabel ?? 'event'} clientLabel={activeVenue.profile.clientLabel ?? 'client'} weddings={venueWeddingsAll} onOpen={(id) => openWedding(id, 'wedding')} onBack={() => navigate('admin')} onCancel={cancelManagedEvent} onReopen={reopenManagedEvent} onTrash={trashManagedEvent} onRestore={restoreManagedEvent} onPermanentDelete={permanentlyDeleteManagedEvent} />}
+      {!showCoupleGate && !showOwnerGate && page === 'calendar' && ownerAuthenticated && <Calendar venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} />}
       {page === 'admin' && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={ownerAuthenticated} authLoading={ownerAuthLoading} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} />}
       {page === 'platform' && <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={weddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} />}
 
@@ -576,7 +743,7 @@ export default function App() {
             {ownerAuthenticated || coupleAuthenticatedWeddingId === activeWedding?.id || page === 'venue'
               ? <><span>{activeVenue.profile.shortName}</span><span>{POWERED_BY_PLATFORM}</span></>
               : platformAuthenticated
-                ? <><span>{PLATFORM_NAME} Admin</span><span>Internal proof of concept · {venueConfigs.length} venue profiles</span></>
+                ? <><span>{PLATFORM_NAME} Admin</span><span>Platform operations · {venueConfigs.length} venue profiles</span></>
                 : <><span>{PLATFORM_NAME}</span><span>Event venue management & planning · venue-first private client workspaces</span></>}
           </div>
           <div className="site-footer__creator">
