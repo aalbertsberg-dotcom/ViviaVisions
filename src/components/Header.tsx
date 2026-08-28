@@ -146,9 +146,30 @@ export default function Header({
         <div className="clean-drawer__links">{drawerItems.map((item) => <button key={`${item.key}-${item.label}`} className={page === item.key ? 'clean-drawer__link active' : 'clean-drawer__link'} onClick={() => go(item.key)}><span><strong>{item.label}</strong>{item.description && <small>{item.description}</small>}</span><span className="clean-drawer__meta">{item.key === 'wedding' && selectionCount > 0 && <b>{selectionCount}</b>}{item.key === 'messages' && unreadMessages > 0 && <b>{unreadMessages}</b>}<i aria-hidden="true">›</i></span></button>)}</div>
 
         <div className="clean-drawer__footer">
-          {mode === 'owner' && <button onClick={() => { setMenuOpen(false); onOwnerLogout() }}>Sign out of {activeVenue.shortName}</button>}
-          {mode === 'platform' && <button onClick={() => { setMenuOpen(false); onPlatformLogout() }}>Sign out of {PLATFORM_SHORT_NAME} Admin</button>}
-          {mode === 'public' && <button onClick={() => go('signin')}>Sign in</button>}
+          <details className="clean-account-menu">
+            <summary>
+              <span>{platformAuthenticated || ownerAuthenticated ? 'Account' : 'Sign in'}</span>
+              <span aria-hidden="true">⌄</span>
+            </summary>
+
+            <div className="clean-account-menu__items">
+              <button onClick={() => go('platform')}>VV Admin</button>
+              <button onClick={() => go('admin')}>{ownerAuthenticated ? `${activeVenue.shortName} Admin` : 'Venue Sign In'}</button>
+              {(platformAuthenticated || ownerAuthenticated) && (
+                <button
+                  className="clean-account-menu__signout"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    if (platformAuthenticated) void onPlatformLogout()
+                    else void onOwnerLogout()
+                  }}
+                >
+                  Sign out
+                </button>
+              )}
+            </div>
+          </details>
+
           {(mode === 'owner' || mode === 'platform') && <button className="clean-drawer__reset" onClick={() => { setMenuOpen(false); onResetPreview() }}>{mode === 'owner' && !activeVenue.isSample ? 'Reset active workspace' : 'Reset demo data'}</button>}
         </div>
       </aside>

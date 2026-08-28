@@ -73,6 +73,7 @@ const previewWeddings: WeddingWorkspace[] = [
 
 type RouteState = { page: PageKey; coupleSlug: string | null; venueSlug: string | null }
 const scopedPages: PageKey[] = ['catalog','wedding','planner','media','ai-preview','messages','calendar','summary','manage-events']
+const venueAdminPages: PageKey[] = ['admin','calendar','manage-events','catalog','wedding','planner','media','ai-preview','messages','summary']
 
 function parseRoute(): RouteState {
   const value = window.location.hash.replace(/^#\/?/, '')
@@ -143,8 +144,11 @@ export default function App() {
   const messages = activeWedding?.messages ?? []
   const packageInfo = profile ? packageById(profile.packageId, activeVenueId) : activeVenue.packages[0]
   const ownerAuthenticated = ownerAuthenticatedVenueId === activeVenueId
-  const databaseOwnerSession = ownerAuthenticated && activeVenue.profile.slug === 'chandelier-oaks'
-  const hasWorkspaceAccess = Boolean(activeWedding && (ownerAuthenticated || coupleAuthenticatedWeddingId === activeWedding.id))
+  /* v1.9.3 platform admins inherit venue admin access */
+  const platformVenueAccess = platformAuthenticated && venueAdminPages.includes(page)
+  const venueAdminAuthenticated = ownerAuthenticated || platformVenueAccess
+  const databaseOwnerSession = venueAdminAuthenticated && !activeVenue.profile.isSample
+  const hasWorkspaceAccess = Boolean(activeWedding && (venueAdminAuthenticated || coupleAuthenticatedWeddingId === activeWedding.id))
 
   useEffect(() => {
     const onHashChange = () => {
@@ -254,7 +258,7 @@ export default function App() {
 
   useEffect(() => {
     if (page !== 'messages' || !activeWedding || !hasWorkspaceAccess) return
-    const role: MessageRole = ownerAuthenticated ? 'venue' : 'bride'
+    const role: MessageRole = venueAdminAuthenticated ? 'venue' : 'bride'
     const nextMessages = activeWedding.messages.map((message) => {
       if (message.senderRole === role) return message
       if (role === 'bride' && !message.readByBride) return { ...message, readByBride: true }
@@ -269,7 +273,7 @@ export default function App() {
         })
       }
     }
-  }, [page, ownerAuthenticated, activeWedding?.id, hasWorkspaceAccess, databaseOwnerSession])
+  }, [page, venueAdminAuthenticated, activeWedding?.id, hasWorkspaceAccess, databaseOwnerSession])
 
   const routeFor = (next: PageKey) => {
     if (next === 'home') return '#/'
@@ -294,6 +298,50 @@ export default function App() {
     const config = venueConfigBySlug(slug)
     selectVenue(config.profile.id)
     window.location.hash = `#/venue/${config.profile.slug}`; setPage('venue'); setRequestedCoupleSlug(null); window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const openVenueAsPlatformAdmin = async (slug: string) => {
+    if (!platformAuthenticated) {
+      openVenueBySlug(slug)
+      return
+    }
+
+    const config = venueConfigBySlug(slug)
+    const venueId = config.profile.id
+    setActiveVenueId(venueId)
+    setRequestedCoupleSlug(null)
+    setCoupleAuthenticatedWeddingId(null)
+    setOwnerAuthenticatedVenueId(null)
+
+    if (!config.profile.isSample && supabase) {
+      try {
+        const fallback = weddings.filter((wedding) => wedding.venueId === venueId)
+        const databaseWeddings = await withOperationTimeout(
+          listVenueEventWorkspaces(config.profile.slug, venueId, fallback),
+          'Loading venue workspaces',
+          20000,
+        )
+
+        setWeddings((current) => [
+          ...current.filter((wedding) => wedding.venueId !== venueId),
+          ...databaseWeddings,
+        ])
+
+        const firstActive = databaseWeddings.find((wedding) => !wedding.deletedAt && wedding.status !== 'Cancelled')
+        if (firstActive) setActiveWeddingId(firstActive.id)
+      } catch (error) {
+        console.error(`Unable to load ${config.profile.shortName} for platform administration.`, error)
+        window.alert(`The ${config.profile.shortName} venue data could not be loaded. Please try again.`)
+        return
+      }
+    } else {
+      const first = weddings.find((wedding) => wedding.venueId === venueId && !wedding.deletedAt && wedding.status !== 'Cancelled')
+      if (first) setActiveWeddingId(first.id)
+    }
+
+    window.location.hash = `#/venue/${config.profile.slug}/owner`
+    setPage('admin')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const openCoupleByWeddingId = (id: string) => {
@@ -696,18 +744,29 @@ export default function App() {
     }
   }
   const authenticateCouple = (code: string) => { if (!activeWedding || code.trim() !== activeWedding.accessCode) return false; setCoupleAuthenticatedWeddingId(activeWedding.id); setOwnerAuthenticatedVenueId(null); return true }
-  const logoutOwner = async () => { setOwnerAuthenticatedVenueId(null); try { if (activeVenue.profile.slug === 'chandelier-oaks' && supabase) await signOutSupabase() } finally { navigate('venue') } }
+  const logoutOwner = async () => {
+    setOwnerAuthenticatedVenueId(null)
+    if (platformAuthenticated) {
+      navigate('platform')
+      return
+    }
+    try {
+      if (!activeVenue.profile.isSample && supabase) await signOutSupabase()
+    } finally {
+      navigate('venue')
+    }
+  }
   const logoutPlatform = async () => { try { if (supabase) await signOutSupabase() } finally { setPlatformAuthenticated(false); navigate('home') } }
   const logoutCouple = () => { setCoupleAuthenticatedWeddingId(null); navigate('venue') }
 
   const selectionCount = useMemo(() => selections.reduce((sum, item) => sum + item.quantity, 0), [selections])
-  const unreadMessages = useMemo(() => messages.filter((message) => { const role: MessageRole = ownerAuthenticated ? 'venue' : 'bride'; if (message.senderRole === role) return false; return role === 'bride' ? !message.readByBride : !message.readByVenue }).length, [messages, ownerAuthenticated])
+  const unreadMessages = useMemo(() => messages.filter((message) => { const role: MessageRole = venueAdminAuthenticated ? 'venue' : 'bride'; if (message.senderRole === role) return false; return role === 'bride' ? !message.readByBride : !message.readByVenue }).length, [messages, venueAdminAuthenticated])
   const protectedPage = page === 'wedding' || page === 'planner' || page === 'media' || page === 'ai-preview' || page === 'messages' || page === 'summary'
   const showCoupleGate = protectedPage && !hasWorkspaceAccess
-  const showOwnerGate = (page === 'calendar' || page === 'manage-events') && !ownerAuthenticated
+  const showOwnerGate = (page === 'calendar' || page === 'manage-events') && !venueAdminAuthenticated
 
   const resetPreview = async () => {
-    if (ownerAuthenticated && activeWedding && !activeVenue.profile.isSample) {
+    if (venueAdminAuthenticated && activeWedding && !activeVenue.profile.isSample) {
       if (!window.confirm(`Reset planning for ${activeWedding.profile.couple}? Resource selections and 2D layouts will be cleared. Event details and messages will stay.`)) return
       try {
         if (databaseOwnerSession) await resetEventPlanning(activeWedding.id)
@@ -733,10 +792,10 @@ export default function App() {
 
   return (
     <div className="app-shell" style={{ '--venue-primary': activeVenue.profile.brandPrimary, '--venue-accent': activeVenue.profile.brandAccent, '--venue-surface': activeVenue.profile.brandSurface ?? '#f5f5f5', '--venue-text': activeVenue.profile.brandText ?? activeVenue.profile.brandPrimary } as CSSProperties}>
-      <Header page={page} onNavigate={navigate} selectionCount={selectionCount} unreadMessages={unreadMessages} activeWeddingName={profile?.couple ?? ''} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} activeVenue={activeVenue.profile} ownerAuthenticated={ownerAuthenticated} coupleAuthenticated={coupleAuthenticatedWeddingId === activeWedding?.id} platformAuthenticated={platformAuthenticated} onSelectWedding={selectActiveWedding} onOwnerLogout={logoutOwner} onCoupleLogout={logoutCouple} onPlatformLogout={logoutPlatform} onResetPreview={resetPreview} />
+      <Header page={page} onNavigate={navigate} selectionCount={selectionCount} unreadMessages={unreadMessages} activeWeddingName={profile?.couple ?? ''} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} activeVenue={activeVenue.profile} ownerAuthenticated={venueAdminAuthenticated} coupleAuthenticated={coupleAuthenticatedWeddingId === activeWedding?.id} platformAuthenticated={platformAuthenticated} onSelectWedding={selectActiveWedding} onOwnerLogout={logoutOwner} onCoupleLogout={logoutCouple} onPlatformLogout={logoutPlatform} onResetPreview={resetPreview} />
 
       {showCoupleGate && activeWedding && <CoupleAccess wedding={activeWedding} venueId={activeVenueId} onSubmitCode={authenticateCouple} onBackHome={() => navigate('venue')} />}
-      {showOwnerGate && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={ownerAuthenticated} authLoading={ownerAuthLoading} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} />}
+      {showOwnerGate && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={venueAdminAuthenticated} authLoading={ownerAuthLoading} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} platformAdminAccess={platformAuthenticated} />}
 
       {!showCoupleGate && !showOwnerGate && page === 'home' && <Home onNavigate={navigate} onOpenVenue={openVenueBySlug} venues={venueConfigs} />}
       {!showCoupleGate && !showOwnerGate && page === 'venues' && <Venues venues={venueConfigs} weddings={weddings} onOpenVenue={openVenueBySlug} onOpenCouple={openCoupleBySlug} onForVenues={() => navigate('for-venues')} />}
@@ -744,21 +803,21 @@ export default function App() {
       {!showCoupleGate && !showOwnerGate && page === 'signin' && <SignIn venues={venueConfigs} activeVenueId={activeVenueId} onSelectVenue={selectVenue} onVenueOwner={() => navigate('admin')} onCouple={openFirstCouple} onBackHome={() => navigate('home')} />}
       {!showCoupleGate && !showOwnerGate && page === 'venue' && <VenuePortal venueId={activeVenueId} weddings={venueWeddings} onNavigate={navigate} onOpenCouple={openCoupleByWeddingId} />}
       {!showCoupleGate && !showOwnerGate && page === 'catalog' && <Catalog venueId={activeVenueId} selections={selections} onSetQuantity={setQuantity} canEdit={hasWorkspaceAccess} onRequireAccess={openFirstCouple} packageTier={packageInfo.tier} packageName={packageInfo.name} onNavigate={navigate} />}
-      {!showCoupleGate && !showOwnerGate && page === 'wedding' && profile && activeWedding && <Wedding venueId={activeVenueId} profile={profile} selections={selections} unreadMessages={unreadMessages} paymentStepsCompleted={activeWedding.paymentStepsCompleted} onProfileChange={updateProfile} onSetQuantity={setQuantity} onNavigate={navigate} ownerMode={ownerAuthenticated} />}
+      {!showCoupleGate && !showOwnerGate && page === 'wedding' && profile && activeWedding && <Wedding venueId={activeVenueId} profile={profile} selections={selections} unreadMessages={unreadMessages} paymentStepsCompleted={activeWedding.paymentStepsCompleted} onProfileChange={updateProfile} onSetQuantity={setQuantity} onNavigate={navigate} ownerMode={venueAdminAuthenticated} />}
       {!showCoupleGate && !showOwnerGate && page === 'planner' && profile && <Planner venueId={activeVenueId} selections={selections} placedItems={placedItems} setPlacedItems={setPlacedItems} onSetQuantity={setQuantity} packageTier={packageInfo.tier} preferredAreaId={profile.receptionArea || activeVenue.areas[0]?.id} onNavigate={navigate} />}
-      {!showCoupleGate && !showOwnerGate && page === 'media' && activeWedding && <MediaLibrary venueId={activeVenueId} weddingId={activeWedding.id} weddingName={activeWedding.profile.couple} ownerMode={ownerAuthenticated} onNavigate={navigate} />}
-      {!showCoupleGate && !showOwnerGate && page === 'ai-preview' && activeWedding && <AiPreview venueId={activeVenueId} weddingId={activeWedding.id} weddingName={activeWedding.profile.couple} preferredAreaId={activeWedding.profile.receptionArea || activeVenue.areas[0]?.id} placedItems={placedItems} selections={selections} ownerMode={ownerAuthenticated} onNavigate={navigate} />}
-      {!showCoupleGate && !showOwnerGate && page === 'messages' && profile && <Messages venueId={activeVenueId} profile={profile} selections={selections} placedItems={placedItems} messages={messages} setMessages={setMessages} currentRole={ownerAuthenticated ? 'venue' : 'bride'} notificationsEnabled={notificationsEnabled} setNotificationsEnabled={setNotificationsEnabled} onOpenContext={openMessageContext} weddings={ownerAuthenticated ? venueWeddings : undefined} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenPlanning={() => activeWedding && openWedding(activeWedding.id, 'wedding')} />}
+      {!showCoupleGate && !showOwnerGate && page === 'media' && activeWedding && <MediaLibrary venueId={activeVenueId} weddingId={activeWedding.id} weddingName={activeWedding.profile.couple} ownerMode={venueAdminAuthenticated} onNavigate={navigate} />}
+      {!showCoupleGate && !showOwnerGate && page === 'ai-preview' && activeWedding && <AiPreview venueId={activeVenueId} weddingId={activeWedding.id} weddingName={activeWedding.profile.couple} preferredAreaId={activeWedding.profile.receptionArea || activeVenue.areas[0]?.id} placedItems={placedItems} selections={selections} ownerMode={venueAdminAuthenticated} onNavigate={navigate} />}
+      {!showCoupleGate && !showOwnerGate && page === 'messages' && profile && <Messages venueId={activeVenueId} profile={profile} selections={selections} placedItems={placedItems} messages={messages} setMessages={setMessages} currentRole={venueAdminAuthenticated ? 'venue' : 'bride'} notificationsEnabled={notificationsEnabled} setNotificationsEnabled={setNotificationsEnabled} onOpenContext={openMessageContext} weddings={venueAdminAuthenticated ? venueWeddings : undefined} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenPlanning={() => activeWedding && openWedding(activeWedding.id, 'wedding')} />}
       {!showCoupleGate && !showOwnerGate && page === 'summary' && activeWedding && <SetupSheet venueId={activeVenueId} wedding={activeWedding} />}
-      {!showCoupleGate && !showOwnerGate && page === 'manage-events' && ownerAuthenticated && <ManageEvents eventLabel={activeVenue.profile.eventLabel ?? 'event'} clientLabel={activeVenue.profile.clientLabel ?? 'client'} weddings={venueWeddingsAll} onOpen={(id) => openWedding(id, 'wedding')} onBack={() => navigate('admin')} onCancel={cancelManagedEvent} onReopen={reopenManagedEvent} onTrash={trashManagedEvent} onRestore={restoreManagedEvent} onPermanentDelete={permanentlyDeleteManagedEvent} />}
-      {!showCoupleGate && !showOwnerGate && page === 'calendar' && ownerAuthenticated && <Calendar venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} />}
-      {page === 'admin' && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={ownerAuthenticated} authLoading={ownerAuthLoading} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} />}
-      {page === 'platform' && <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={weddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} />}
+      {!showCoupleGate && !showOwnerGate && page === 'manage-events' && venueAdminAuthenticated && <ManageEvents eventLabel={activeVenue.profile.eventLabel ?? 'event'} clientLabel={activeVenue.profile.clientLabel ?? 'client'} weddings={venueWeddingsAll} onOpen={(id) => openWedding(id, 'wedding')} onBack={() => navigate('admin')} onCancel={cancelManagedEvent} onReopen={reopenManagedEvent} onTrash={trashManagedEvent} onRestore={restoreManagedEvent} onPermanentDelete={permanentlyDeleteManagedEvent} />}
+      {!showCoupleGate && !showOwnerGate && page === 'calendar' && venueAdminAuthenticated && <Calendar venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} />}
+      {page === 'admin' && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={venueAdminAuthenticated} authLoading={ownerAuthLoading} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} platformAdminAccess={platformAuthenticated} />}
+      {page === 'platform' && <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={weddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} onManageVenue={openVenueAsPlatformAdmin} />}
 
       <footer className="site-footer saas-footer">
         <div className="shell">
           <div className="site-footer__context">
-            {ownerAuthenticated || coupleAuthenticatedWeddingId === activeWedding?.id || page === 'venue'
+            {venueAdminAuthenticated || coupleAuthenticatedWeddingId === activeWedding?.id || page === 'venue'
               ? <><span>{activeVenue.profile.shortName}</span><span>{POWERED_BY_PLATFORM}</span></>
               : platformAuthenticated
                 ? <><span>{PLATFORM_NAME} Admin</span><span>Platform operations · {venueConfigs.length} venue profiles</span></>

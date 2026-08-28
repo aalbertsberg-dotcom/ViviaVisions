@@ -3388,3 +3388,85 @@ body { font-size:15px; line-height:1.5; }
     letter-spacing: .12em;
   }
 }
+
+/* v1.9.3a platform venue actions */
+.vv-admin-venue-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 700px) {
+  .vv-admin-venue-action {
+    width: 100%;
+  }
+
+  .vv-admin-venue-action .button {
+    flex: 1 1 140px;
+  }
+}
+
+/* v1.9.3c account dropdown */
+.clean-account-menu {
+  width: 100%;
+}
+
+.clean-account-menu summary {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--brown);
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+
+.clean-account-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.clean-account-menu[open] summary {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.clean-account-menu__items {
+  margin-top: 7px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.clean-account-menu__items button {
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+  color: var(--brown);
+  text-align: left;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.clean-account-menu__items button:last-child {
+  border-bottom: 0;
+}
+
+.clean-account-menu__items button:hover {
+  background: #faf7f2;
+}
+
+.clean-account-menu__items .clean-account-menu__signout {
+  color: #9b5146;
+}

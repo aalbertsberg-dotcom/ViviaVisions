@@ -18,12 +18,13 @@ type AdminProps = {
   onExitPreview: () => void
   onLogout: () => void | Promise<void>
   onNavigate: (page: PageKey) => void
+  platformAdminAccess?: boolean
 }
 
 function formatDate(value: string) { return new Date(`${value}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) }
 function venueUnread(wedding: WeddingWorkspace) { return wedding.messages.filter((message) => message.senderRole !== 'venue' && !message.readByVenue).length }
 
-export default function Admin({ venueId, weddings, activeWeddingId, onSelectWedding, onOpenWedding, onAddWedding, authenticated, authLoading, onAuthenticate, onExitPreview, onLogout, onNavigate }: AdminProps) {
+export default function Admin({ venueId, weddings, activeWeddingId, onSelectWedding, onOpenWedding, onAddWedding, authenticated, authLoading, onAuthenticate, onExitPreview, onLogout, onNavigate, platformAdminAccess = false }: AdminProps) {
   const config = venueConfigById(venueId)
   const { profile: venue, inventory, packages } = config
   const eventLabel = venue.eventLabel ?? 'event'
@@ -116,7 +117,7 @@ export default function Admin({ venueId, weddings, activeWeddingId, onSelectWedd
     <main className="page-main shell admin-page venue-admin" style={{ '--venue-primary': venue.brandPrimary, '--venue-accent': venue.brandAccent, '--venue-surface': venue.brandSurface ?? '#f4f4f4' } as CSSProperties}>
       <section className="page-intro page-intro--split admin-intro">
         <div><p className="eyebrow">{venue.shortName.toUpperCase()} · OWNER DASHBOARD</p><h1>Every {eventLabel}. One venue command center.</h1><p>Switch {eventPlural}, watch booked dates, manage {inventoryTitle}, review package status and keep each {clientLabel}'s private workspace separate.</p></div>
-        <div className="owner-session-actions"><span className="prototype-badge prototype-badge--large">{venue.previewLabel}</span><button className="text-link" onClick={onLogout}>Sign out</button></div>
+        <div className="owner-session-actions"><span className="prototype-badge prototype-badge--large">{venue.previewLabel}</span><button className="text-link" onClick={onLogout}>{platformAdminAccess ? `Back to ${PLATFORM_NAME} Admin` : 'Sign out'}</button></div>
       </section>
 
       {activeWedding && <section className="panel owner-active-wedding owner-active-wedding--dynamic"><div className="owner-active-wedding__copy"><p className="eyebrow">ACTIVE {eventLabel.toUpperCase()}</p><h2>{activeWedding.profile.couple}</h2><p>{formatDate(activeWedding.profile.date)} · {packageById(activeWedding.profile.packageId, venueId).name}</p></div><div className="owner-active-wedding__controls"><label htmlFor="owner-active-wedding-select">Switch active {clientLabel}</label><select id="owner-active-wedding-select" value={activeWeddingId} onChange={(event) => onSelectWedding(event.target.value)}>{sortedWeddings.map((wedding) => <option key={wedding.id} value={wedding.id}>{wedding.profile.couple} · {formatDate(wedding.profile.date)}</option>)}</select><div className="owner-active-wedding__buttons"><button className="button button--primary button--small" onClick={() => onOpenWedding(activeWedding.id, 'wedding')}>Open workspace</button><button className="button button--ghost button--small" onClick={() => onOpenWedding(activeWedding.id, 'messages')}>Messages</button></div></div></section>}

@@ -15,6 +15,7 @@ type PlatformAdminProps = {
   weddings: WeddingWorkspace[]
   venues: VenueConfig[]
   onOpenVenue: (slug: string) => void
+  onManageVenue: (slug: string) => void | Promise<void>
 }
 
 function formatActivityTime(value: string) {
@@ -35,6 +36,7 @@ export default function PlatformAdmin({
   venues,
   onNavigate,
   onOpenVenue,
+  onManageVenue,
 }: PlatformAdminProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -238,10 +240,16 @@ export default function PlatformAdmin({
 
                 <div className="vv-admin-venue-action">
                   <button
-                    className="button button--primary button--small"
+                    className="button button--ghost button--small"
                     onClick={() => onOpenVenue(config.profile.slug)}
                   >
                     Open venue
+                  </button>
+                  <button
+                    className="button button--primary button--small"
+                    onClick={() => { void onManageVenue(config.profile.slug) }}
+                  >
+                    Manage venue
                   </button>
                 </div>
               </article>
