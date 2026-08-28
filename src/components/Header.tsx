@@ -4,7 +4,7 @@ import Logo from './Logo'
 import type { VenueProfile, WeddingWorkspace } from '../types'
 import { PLATFORM_NAME, PLATFORM_NAME_UPPER, PLATFORM_SHORT_NAME, POWERED_BY_PLATFORM } from '../config/platform'
 
-export type PageKey = 'home' | 'venues' | 'for-venues' | 'signin' | 'venue' | 'catalog' | 'wedding' | 'planner' | 'media' | 'ai-preview' | 'messages' | 'calendar' | 'summary' | 'admin' | 'manage-events' | 'platform'
+export type PageKey = 'home' | 'venues' | 'for-venues' | 'signin' | 'venue' | 'catalog' | 'wedding' | 'planner' | 'media' | 'ai-preview' | 'messages' | 'calendar' | 'summary' | 'admin' | 'manage-events' | 'inventory-admin' | 'venue-content' | 'platform' | 'platform-inventory'
 
 type HeaderProps = {
   page: PageKey
@@ -78,11 +78,13 @@ export default function Header({
   const ownerNav: NavItem[] = [
     { key: 'admin', label: 'Dashboard', description: `${eventPlural[0].toUpperCase() + eventPlural.slice(1)}, inventory and operations` },
     { key: 'calendar', label: 'Calendar' },
-    { key: 'catalog', label: 'Inventory' },
+    { key: 'inventory-admin', label: 'Inventory' },
     { key: 'messages', label: 'Messages' },
   ]
   const ownerMore: NavItem[] = [
     { key: 'manage-events', label: 'Manage Events', description: 'Cancel, restore or delete workspaces safely' },
+    { key: 'venue-content', label: 'Venue Setup', description: 'Profile, packages and planning spaces' },
+    { key: 'catalog', label: 'Client Catalog', description: 'Preview the client-facing inventory catalog' },
     { key: 'wedding', label: `Active ${eventLabel}`, description: 'Details, package and planning checklist' },
     { key: 'planner', label: '2D Designer', description: 'Build the source-of-truth layout first' },
     { key: 'media', label: 'Media Library', description: 'Venue photos, video, files and AI references' },
@@ -102,9 +104,18 @@ export default function Header({
   ]
   const platformNav: NavItem[] = [
     { key: 'platform', label: 'Admin' },
+    { key: 'platform-inventory', label: 'Inventory' },
     { key: 'venues', label: 'Venue Accounts' },
     { key: 'for-venues', label: 'Requests' },
   ]
+
+  const hrefFor = (next: PageKey) => {
+    if (next === 'home') return '#/'
+    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-inventory') return `#/${next}`
+    if (next === 'venue') return `#/venue/${activeVenue.slug}`
+    if (next === 'admin') return `#/venue/${activeVenue.slug}/owner`
+    return `#/venue/${activeVenue.slug}/${next}`
+  }
 
   const go = (next: PageKey) => { setMenuOpen(false); setProfileOpen(false); onNavigate(next) }
   const desktopItems = mode === 'owner' ? ownerNav : mode === 'couple' ? coupleNav : mode === 'platform' ? platformNav : publicNav
@@ -122,7 +133,7 @@ export default function Header({
         </div>
 
         <nav className="app-header__desktop-nav" aria-label="Primary navigation">
-          {desktopItems.map((item) => <button key={item.key} className={page === item.key ? 'app-nav-link active' : 'app-nav-link'} onClick={() => go(item.key)}>{item.label}{item.key === 'messages' && unreadMessages > 0 && <span className="app-nav-badge">{unreadMessages}</span>}</button>)}
+          {desktopItems.map((item) => <a key={item.key} href={hrefFor(item.key)} className={page === item.key ? 'app-nav-link active' : 'app-nav-link'} onClick={(event) => { event.preventDefault(); go(item.key) }}>{item.label}{item.key === 'messages' && unreadMessages > 0 && <span className="app-nav-badge">{unreadMessages}</span>}</a>)}
         </nav>
 
         <div className="app-header__actions">
@@ -143,7 +154,7 @@ export default function Header({
 
         {mode === 'owner' && <div className="clean-drawer__switcher"><label htmlFor="drawer-active-wedding">Active {eventLabel}</label><select id="drawer-active-wedding" value={activeWeddingId} onChange={(event) => onSelectWedding(event.target.value)}>{sortedWeddings.map((wedding) => <option value={wedding.id} key={wedding.id}>{wedding.profile.couple} · {wedding.profile.date}</option>)}</select><small>All {eventLabel}-specific tools follow this selection inside {activeVenue.shortName}.</small></div>}
 
-        <div className="clean-drawer__links">{drawerItems.map((item) => <button key={`${item.key}-${item.label}`} className={page === item.key ? 'clean-drawer__link active' : 'clean-drawer__link'} onClick={() => go(item.key)}><span><strong>{item.label}</strong>{item.description && <small>{item.description}</small>}</span><span className="clean-drawer__meta">{item.key === 'wedding' && selectionCount > 0 && <b>{selectionCount}</b>}{item.key === 'messages' && unreadMessages > 0 && <b>{unreadMessages}</b>}<i aria-hidden="true">›</i></span></button>)}</div>
+        <div className="clean-drawer__links">{drawerItems.map((item) => <a key={`${item.key}-${item.label}`} href={hrefFor(item.key)} className={page === item.key ? 'clean-drawer__link active' : 'clean-drawer__link'} onClick={(event) => { event.preventDefault(); go(item.key) }}><span><strong>{item.label}</strong>{item.description && <small>{item.description}</small>}</span><span className="clean-drawer__meta">{item.key === 'wedding' && selectionCount > 0 && <b>{selectionCount}</b>}{item.key === 'messages' && unreadMessages > 0 && <b>{unreadMessages}</b>}<i aria-hidden="true">›</i></span></a>)}</div>
 
         <div className="clean-drawer__footer">
           <details className="clean-account-menu">

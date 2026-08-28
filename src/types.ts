@@ -26,6 +26,7 @@ export type InventoryItem = {
   featured?: boolean
   accessTier: PackageTier
   packageNote?: string
+  imageUrl?: string
 }
 
 export type VenuePackage = {
@@ -222,5 +223,8 @@ export type MediaAsset = {
 }
 
 export type MediaAssetRecord = MediaAsset & {
-  blob: Blob
+  blob?: Blob
+  url?: string
+  storagePath?: string
+  source?: 'cloud' | 'local'
 }

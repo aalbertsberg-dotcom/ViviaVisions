@@ -155,6 +155,9 @@ export default function PlatformAdmin({
           <p className="eyebrow">{PLATFORM_NAME_UPPER}</p>
           <h1>Admin</h1>
         </div>
+        <a href="#/platform-inventory" className="button button--primary button--small platform-inventory-button" onClick={(event) => { event.preventDefault(); onNavigate('platform-inventory') }}>
+          Inventory
+        </a>
       </section>
 
       <section className="vv-admin-metrics" aria-label="Platform metrics">
@@ -239,18 +242,20 @@ export default function PlatformAdmin({
                 </div>
 
                 <div className="vv-admin-venue-action">
-                  <button
+                  <a
                     className="button button--ghost button--small"
-                    onClick={() => onOpenVenue(config.profile.slug)}
+                    href={`#/venue/${config.profile.slug}`}
+                    onClick={(event) => { event.preventDefault(); onOpenVenue(config.profile.slug) }}
                   >
                     Open venue
-                  </button>
-                  <button
+                  </a>
+                  <a
                     className="button button--primary button--small"
-                    onClick={() => { void onManageVenue(config.profile.slug) }}
+                    href={`#/venue/${config.profile.slug}/owner`}
+                    onClick={(event) => { event.preventDefault(); void onManageVenue(config.profile.slug) }}
                   >
                     Manage venue
-                  </button>
+                  </a>
                 </div>
               </article>
             )

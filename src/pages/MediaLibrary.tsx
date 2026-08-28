@@ -10,6 +10,14 @@ const MAX_DEMO_FILE_SIZE = 50 * 1024 * 1024
 function AssetPreview({ asset }: { asset: MediaAssetRecord }) {
   const [url, setUrl] = useState('')
   useEffect(() => {
+    if (asset.url) {
+      setUrl(asset.url)
+      return
+    }
+    if (!asset.blob) {
+      setUrl('')
+      return
+    }
     const next = URL.createObjectURL(asset.blob)
     setUrl(next)
     return () => URL.revokeObjectURL(next)
@@ -100,7 +108,7 @@ export default function MediaLibrary({ venueId, weddingId, weddingName, ownerMod
         <div className="media-intro__actions"><button className="button button--primary" onClick={() => inputRef.current?.click()} disabled={uploading}>{uploading ? 'Uploading…' : '+ Upload files'}</button><button className="button button--ghost" onClick={() => onNavigate('ai-preview')}>AI Preview Studio</button></div>
       </section>
 
-      <section className="panel media-demo-note"><strong>{isChandelier ? 'Current build storage' : 'Working preview storage'}</strong><p>Files are stored only in this browser using IndexedDB. Production will send them to secure cloud storage so they are available across devices and only to authorized users at {venue.shortName}.</p></section>
+      <section className="panel media-demo-note"><strong>{isChandelier ? 'Secure cloud media' : 'Working preview storage'}</strong><p>{isChandelier ? 'Real venue and client uploads are stored in private Supabase Storage and follow venue/event permissions across devices. The three showcase demo weddings intentionally keep browser-only media.' : 'This fictional showcase venue keeps media in local browser storage.'}</p></section>
 
       <section className="media-controls panel">
         {ownerMode && <div className="media-scope-toggle"><button className={scope === 'venue' ? 'active' : ''} onClick={() => setScope('venue')}>Venue library</button><button className={scope === 'wedding' ? 'active' : ''} onClick={() => setScope('wedding')}>{weddingName}</button></div>}

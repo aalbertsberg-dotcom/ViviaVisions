@@ -1,4 +1,4 @@
-# ViviaVisions v1.12.0
+# ViviaVisions v1.13.0
 
 **Every detail. Every option. Every vision.**
 
@@ -20,6 +20,10 @@ ViviaVisions is a multi-tenant venue planning platform built with React, TypeScr
 - Chandelier Oaks as the first real venue
 - three explicit demo weddings retained for showcase use
 - AI visual preview marked Coming Soon
+- private Supabase Storage for real venue/client media
+- full live-venue inventory CRUD with public inventory photos and CSV import
+- ViviaVisions Admin inventory view separated by venue
+- venue profile, package and planning-space content management
 
 ## Local development
 

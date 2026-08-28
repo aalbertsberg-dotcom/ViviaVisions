@@ -68,7 +68,12 @@ export default function AiPreview({ venueId, weddingId, weddingName, preferredAr
     const width = 1200; const height = 720; canvas.width = width; canvas.height = height
     let src = SAMPLE_SCENE; let objectUrl = ''
     const asset = assets.find((entry) => entry.id === referenceId)
-    if (asset) { objectUrl = URL.createObjectURL(asset.blob); src = objectUrl }
+    if (asset?.url) {
+      src = asset.url
+    } else if (asset?.blob) {
+      objectUrl = URL.createObjectURL(asset.blob)
+      src = objectUrl
+    }
     try {
       const image = await loadImage(src)
       ctx.save()

@@ -17,6 +17,8 @@ import SetupSheet from './pages/SetupSheet'
 import Admin from './pages/Admin'
 import ManageEvents from './pages/ManageEvents'
 import PlatformAdmin from './pages/PlatformAdmin'
+import InventoryManager from './pages/InventoryManager'
+import VenueContentManager from './pages/VenueContentManager'
 import { PLATFORM_NAME, POWERED_BY_PLATFORM, platformConfig } from './config/platform'
 import { isDemoClientWorkspace } from './config/demo'
 import { buildPublicAppUrl } from './config/runtime'
@@ -74,8 +76,8 @@ const previewWeddings: WeddingWorkspace[] = [
 ]
 
 type RouteState = { page: PageKey; coupleSlug: string | null; venueSlug: string | null }
-const scopedPages: PageKey[] = ['catalog','wedding','planner','media','ai-preview','messages','calendar','summary','manage-events']
-const venueAdminPages: PageKey[] = ['admin','calendar','manage-events','catalog','wedding','planner','media','ai-preview','messages','summary']
+const scopedPages: PageKey[] = ['catalog','wedding','planner','media','ai-preview','messages','calendar','summary','manage-events','inventory-admin','venue-content']
+const venueAdminPages: PageKey[] = ['admin','calendar','manage-events','inventory-admin','venue-content','catalog','wedding','planner','media','ai-preview','messages','summary']
 const CLIENT_PORTAL_SLUG = '__client_portal__'
 
 function parseRoute(): RouteState {
@@ -91,7 +93,7 @@ function parseRoute(): RouteState {
     if (parts[2] && scopedPages.includes(parts[2] as PageKey)) return { page: parts[2] as PageKey, coupleSlug: null, venueSlug }
     return { page: 'venue', coupleSlug: null, venueSlug }
   }
-  const allowed: PageKey[] = ['home','venues','for-venues','signin','platform']
+  const allowed: PageKey[] = ['home','venues','for-venues','signin','platform','platform-inventory']
   return { page: allowed.includes(parts[0] as PageKey) ? parts[0] as PageKey : 'home', coupleSlug: null, venueSlug: null }
 }
 
@@ -386,7 +388,7 @@ export default function App() {
 
   const routeFor = (next: PageKey) => {
     if (next === 'home') return '#/'
-    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform') return `#/${next}`
+    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-inventory') return `#/${next}`
     if (next === 'venue') return `#/venue/${activeVenue.profile.slug}`
     if (next === 'admin') return `#/venue/${activeVenue.profile.slug}/owner`
     return `#/venue/${activeVenue.profile.slug}/${next}`
@@ -1042,7 +1044,7 @@ export default function App() {
   const unreadMessages = useMemo(() => messages.filter((message) => { const role: MessageRole = venueAdminAuthenticated ? 'venue' : 'bride'; if (message.senderRole === role) return false; return role === 'bride' ? !message.readByBride : !message.readByVenue }).length, [messages, venueAdminAuthenticated])
   const protectedPage = page === 'wedding' || page === 'planner' || page === 'media' || page === 'ai-preview' || page === 'messages' || page === 'summary'
   const showCoupleGate = protectedPage && !hasWorkspaceAccess
-  const showOwnerGate = (page === 'calendar' || page === 'manage-events') && !venueAdminAuthenticated
+  const showOwnerGate = (page === 'calendar' || page === 'manage-events' || page === 'inventory-admin' || page === 'venue-content') && !venueAdminAuthenticated
 
   const resetPreview = async () => {
     if (venueAdminAuthenticated && activeWedding && !activeVenue.profile.isSample) {
@@ -1090,8 +1092,14 @@ export default function App() {
       {!showCoupleGate && !showOwnerGate && page === 'summary' && activeWedding && <SetupSheet venueId={activeVenueId} wedding={activeWedding} />}
       {!showCoupleGate && !showOwnerGate && page === 'manage-events' && venueAdminAuthenticated && <ManageEvents eventLabel={activeVenue.profile.eventLabel ?? 'event'} clientLabel={activeVenue.profile.clientLabel ?? 'client'} weddings={venueWeddingsAll} onOpen={(id) => openWedding(id, 'wedding')} onBack={() => navigate('admin')} onCancel={cancelManagedEvent} onReopen={reopenManagedEvent} onTrash={trashManagedEvent} onRestore={restoreManagedEvent} onPermanentDelete={permanentlyDeleteManagedEvent} />}
       {!showCoupleGate && !showOwnerGate && page === 'calendar' && venueAdminAuthenticated && <Calendar venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} />}
+      {!showCoupleGate && !showOwnerGate && page === 'inventory-admin' && venueAdminAuthenticated && <InventoryManager venues={venueConfigs} initialVenueId={activeVenueId} platformMode={false} onBack={() => navigate('admin')} />}
+      {!showCoupleGate && !showOwnerGate && page === 'venue-content' && venueAdminAuthenticated && <VenueContentManager venueId={activeVenueId} onBack={() => navigate('admin')} />}
       {page === 'admin' && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={venueAdminAuthenticated} authLoading={ownerAuthLoading} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} platformAdminAccess={platformAuthenticated} />}
       {page === 'platform' && <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={dedupedWeddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} onManageVenue={openVenueAsPlatformAdmin} />}
+      {page === 'platform-inventory' && (platformAuthenticated
+        ? <InventoryManager venues={venueConfigs} initialVenueId={activeVenueId} platformMode onBack={() => navigate('platform')} />
+        : <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={dedupedWeddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} onManageVenue={openVenueAsPlatformAdmin} />
+      )}
 
       <footer className="site-footer saas-footer">
         <div className="shell">

@@ -121,6 +121,7 @@ export async function loadVenueConfigFromSupabase(slug: string, fallback: VenueC
     featured: Boolean(row.featured),
     accessTier: packageTier(row.access_tier),
     packageNote: optionalText(row.package_note),
+    imageUrl: optionalText(row.image_url),
   }))
 
   return {

@@ -73,7 +73,7 @@ export default function Catalog({ venueId, selections, onSetQuantity, canEdit, o
           const allowed = itemAllowedForTier(item, packageTier)
           return (
             <article className={allowed ? 'catalog-card' : 'catalog-card catalog-card--locked'} key={item.id}>
-              <button className="catalog-card__image-button" onClick={() => setDetailId(item.id)}><DecorVisual styleName={item.imageStyle} name={item.name} /></button>
+              <button className="catalog-card__image-button" onClick={() => setDetailId(item.id)}>{item.imageUrl ? <img className="catalog-card__real-image" src={item.imageUrl} alt={item.name} /> : <DecorVisual styleName={item.imageStyle} name={item.name} />}</button>
               <div className="catalog-card__body">
                 <div className="catalog-card__meta"><span>{item.category}</span><span>{isChandelier ? `${item.quantity} working qty` : `${item.quantity} demo qty`}</span></div>
                 <h3><button onClick={() => setDetailId(item.id)}>{item.name}</button></h3>
@@ -105,7 +105,7 @@ export default function Catalog({ venueId, selections, onSetQuantity, canEdit, o
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setDetailId(null)}>
           <section className="detail-modal" role="dialog" aria-modal="true" aria-label={detail.name} onMouseDown={(event) => event.stopPropagation()}>
             <button className="detail-modal__close" onClick={() => setDetailId(null)}>×</button>
-            <DecorVisual styleName={detail.imageStyle} name={detail.name} large />
+            {detail.imageUrl ? <img className="detail-modal__real-image" src={detail.imageUrl} alt={detail.name} /> : <DecorVisual styleName={detail.imageStyle} name={detail.name} large />}
             <div className="detail-modal__body"><span className="mini-label">{detail.category}</span><h2>{detail.name}</h2><p>{detail.description}</p><dl><div><dt>Color</dt><dd>{detail.color}</dd></div><div><dt>{isChandelier ? 'Working quantity' : 'Quantity'}</dt><dd>{detail.quantity}</dd></div><div><dt>Storage</dt><dd>{detail.storage}</dd></div><div><dt>Package access</dt><dd>{tierLabel[detail.accessTier]}</dd></div></dl>{detail.packageNote && <div className="sample-data-note"><strong>{venue.isSample ? 'Sample configuration' : 'Inventory onboarding field'}</strong><span>{detail.packageNote}</span></div>}</div>
           </section>
         </div>
