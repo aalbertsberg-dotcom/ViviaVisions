@@ -3516,3 +3516,167 @@ body { font-size:15px; line-height:1.5; }
   opacity: .72;
   background: #f5f2ee;
 }
+/* v1.11 client account management */
+.client-forgot-password {
+  align-self: flex-start;
+  margin-top: -2px;
+  padding: 0;
+}
+
+.client-forgot-password:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.client-recovery-form {
+  margin-top: 18px;
+}
+
+.client-access-manager {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.client-access-manager__heading {
+  display: grid;
+  gap: 3px;
+}
+
+.client-access-manager__heading strong {
+  color: var(--brown);
+}
+
+.client-access-manager__heading small,
+.client-access-manager__loading {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.client-access-contact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.client-access-contact__copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.client-access-contact__copy > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.client-access-contact__copy > strong {
+  overflow-wrap: anywhere;
+  color: var(--brown);
+  font-size: 13px;
+}
+
+.client-access-state {
+  width: fit-content;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 10px !important;
+  font-weight: 800;
+}
+
+.client-access-state--active {
+  background: #edf6ef;
+  color: #3f6b49 !important;
+}
+
+.client-access-state--pending {
+  background: #fff7e7;
+  color: #8a6523 !important;
+}
+
+.client-access-state--new {
+  background: #f3f1ee;
+  color: #716b64 !important;
+}
+
+.client-access-state--revoked {
+  background: #fff0ed;
+  color: #9b5146 !important;
+}
+
+@media (max-width: 640px) {
+  .client-access-contact {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .client-access-contact .button {
+    width: 100%;
+  }
+}
+/* v1.11.3 temporary demo event chooser */
+.demo-event-access {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.demo-event-access__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.demo-event-access__list {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #faf7f2;
+}
+
+.demo-event-access__list > small {
+  padding: 2px 3px 6px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.demo-event-access__item {
+  width: 100%;
+  display: grid;
+  gap: 3px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--brown);
+  text-align: left;
+  cursor: pointer;
+}
+
+.demo-event-access__item:hover {
+  background: #f5efe7;
+}
+
+.demo-event-access__item span {
+  font-weight: 800;
+}
+
+.demo-event-access__item small {
+  color: var(--muted);
+}

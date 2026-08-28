@@ -3,19 +3,24 @@ import type { PageKey } from '../components/Header'
 import { venueConfigById } from '../data'
 import type { WeddingWorkspace } from '../types'
 import { PLATFORM_NAME, PLATFORM_NAME_UPPER } from '../config/platform'
+import { isDemoClientWorkspace } from '../config/demo'
 
 type VenuePortalProps = {
   venueId: string
   weddings: WeddingWorkspace[]
   onNavigate: (page: PageKey) => void
   onOpenCouple: (weddingId: string) => void
+  onOpenClientPortal: () => void
 }
 
-export default function VenuePortal({ venueId, weddings, onNavigate, onOpenCouple }: VenuePortalProps) {
+export default function VenuePortal({ venueId, weddings, onNavigate, onOpenCouple, onOpenClientPortal }: VenuePortalProps) {
   const config = venueConfigById(venueId)
   const { profile: venue, packages, areas } = config
-  const firstEvent = weddings[0]
   const isChandelier = venue.id === 'venue-chandelier-oaks'
+  const publicShowcaseWeddings = isChandelier
+    ? weddings.filter((event) => isDemoClientWorkspace(venue.slug, event.accessSlug))
+    : weddings
+  const firstEvent = publicShowcaseWeddings[0]
   const isFoundry = venue.id === 'venue-foundry-rivergate'
   const eventLabel = venue.eventLabel ?? 'event'
   const eventPlural = venue.eventPluralLabel ?? 'events'
@@ -37,7 +42,9 @@ export default function VenuePortal({ venueId, weddings, onNavigate, onOpenCoupl
             <h1>{heroTitle}</h1>
             <p>{heroBody}</p>
             <div className="hero__actions">
-              {firstEvent && <button className="button button--venue" onClick={() => onOpenCouple(firstEvent.id)}>{isChandelier ? 'Open Couple Portal' : `Enter a ${clientLabel} workspace`}</button>}
+              {isChandelier
+                ? <button className="button button--venue" onClick={onOpenClientPortal}>Open Couple Portal</button>
+                : firstEvent && <button className="button button--venue" onClick={() => onOpenCouple(firstEvent.id)}>{`Enter a ${clientLabel} workspace`}</button>}
               <button className="button button--venue-ghost" onClick={() => onNavigate('admin')}>{isChandelier ? 'Owner Portal' : 'Venue owner preview'}</button>
             </div>
             {!isChandelier && <div className="venue-preview-credentials"><span>Owner access is prefilled on the next screen.</span><span>{`${weddings.length} private ${clientPlural} workspaces configured.`}</span></div>}
@@ -74,7 +81,7 @@ export default function VenuePortal({ venueId, weddings, onNavigate, onOpenCoupl
             {areas.map((area) => (
               <article className={`venue-area-card venue-area-card--${area.visual}`} key={area.id}>
                 <div className="venue-area-card__art"><span/><i/><b/></div>
-                <div className="venue-area-card__body"><span>{area.kind}</span><h3>{area.name}</h3><p>{area.description}</p>{firstEvent && <button className="text-link" onClick={() => onOpenCouple(firstEvent.id)}>Open {eventLabel} tools →</button>}</div>
+                <div className="venue-area-card__body"><span>{area.kind}</span><h3>{area.name}</h3><p>{area.description}</p>{isChandelier ? <button className="text-link" onClick={onOpenClientPortal}>Open {eventLabel} tools →</button> : firstEvent && <button className="text-link" onClick={() => onOpenCouple(firstEvent.id)}>Open {eventLabel} tools →</button>}</div>
               </article>
             ))}
           </div>
@@ -95,7 +102,7 @@ export default function VenuePortal({ venueId, weddings, onNavigate, onOpenCoupl
 
       <section className="section shell venue-couple-preview-section">
         <div className="section-heading"><div><p className="eyebrow">{isChandelier ? 'COUPLE PLANNING PORTALS' : `PRIVATE ${eventLabel.toUpperCase()} WORKSPACES`}</p><h2>{isChandelier ? 'Each Chandelier Oaks wedding gets its own planning workspace.' : `Every ${clientLabel} stays inside ${venue.shortName}.`}</h2><p className="section-lead">{isChandelier ? 'Package, selections, messages, layouts, media and setup information stay isolated to that couple and wedding date.' : `These workspaces are separate from every other venue in ${PLATFORM_NAME}.`}</p></div></div>
-        <div className="venue-couple-preview-grid">{weddings.map((event) => <button key={event.id} onClick={() => onOpenCouple(event.id)}><span>{event.status}</span><strong>{event.profile.couple}</strong><small>{new Date(`${event.profile.date}T12:00:00`).toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}</small><b>Open workspace →</b></button>)}</div>
+        <div className="venue-couple-preview-grid">{publicShowcaseWeddings.map((event) => <button key={event.id} onClick={() => onOpenCouple(event.id)}><span>{event.status}</span><strong>{event.profile.couple}</strong><small>{new Date(`${event.profile.date}T12:00:00`).toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}</small><b>Open workspace →</b></button>)}</div>
       </section>
 
       <section className="venue-contact-strip venue-contact-strip--dynamic">

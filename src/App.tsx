@@ -20,7 +20,7 @@ import PlatformAdmin from './pages/PlatformAdmin'
 import { PLATFORM_NAME, POWERED_BY_PLATFORM, platformConfig } from './config/platform'
 import { isDemoClientWorkspace } from './config/demo'
 import { supabase } from './lib/supabase'
-import { claimClientEventAccess, getVenueStaffAccessBySlug, signInWithPassword, signOut as signOutSupabase, signUpWithPassword } from './lib/repositories/auth'
+import { claimClientEventAccess, claimMyClientEvents, getVenueStaffAccessBySlug, signInWithPassword, signOut as signOutSupabase, signUpWithPassword } from './lib/repositories/auth'
 import { appendClientEventMessages, cancelVenueEvent, createVenueEventWorkspace, listVenueEventWorkspaces, markClientEventMessagesRead, permanentDeleteVenueEvent, reopenVenueEvent, resetEventPlanning, restoreVenueEvent, saveClientEventPlanningProfile, saveEventLayoutItems, saveEventMessages, saveEventProfile, setEventSelection, softDeleteVenueEvent } from './lib/repositories/events'
 import { loadVenueConfigFromSupabase } from './lib/repositories/venueConfig'
 import CoupleAccess from './pages/CoupleAccess'
@@ -75,6 +75,7 @@ const previewWeddings: WeddingWorkspace[] = [
 type RouteState = { page: PageKey; coupleSlug: string | null; venueSlug: string | null }
 const scopedPages: PageKey[] = ['catalog','wedding','planner','media','ai-preview','messages','calendar','summary','manage-events']
 const venueAdminPages: PageKey[] = ['admin','calendar','manage-events','catalog','wedding','planner','media','ai-preview','messages','summary']
+const CLIENT_PORTAL_SLUG = '__client_portal__'
 
 function parseRoute(): RouteState {
   const value = window.location.hash.replace(/^#\/?/, '')
@@ -84,6 +85,7 @@ function parseRoute(): RouteState {
   if (parts[0] === 'venue' && parts[1]) {
     const venueSlug = decodeURIComponent(parts[1])
     if ((parts[2] === 'couple' || parts[2] === 'client') && parts[3]) return { page: 'wedding', coupleSlug: decodeURIComponent(parts[3]), venueSlug }
+    if (parts[2] === 'couple' || parts[2] === 'client') return { page: 'wedding', coupleSlug: CLIENT_PORTAL_SLUG, venueSlug }
     if (parts[2] === 'owner') return { page: 'admin', coupleSlug: null, venueSlug }
     if (parts[2] && scopedPages.includes(parts[2] as PageKey)) return { page: parts[2] as PageKey, coupleSlug: null, venueSlug }
     return { page: 'venue', coupleSlug: null, venueSlug }
@@ -193,6 +195,10 @@ export default function App() {
   const databaseWorkspaceSession = databaseOwnerSession || realClientAuthenticated
   const clientAccessSlug = requestedCoupleSlug ?? accessWedding?.accessSlug ?? ''
   const demoClientRoute = isDemoClientWorkspace(activeVenue.profile.slug, clientAccessSlug)
+  const clientPortalDemoWeddings = useMemo(
+    () => venueWeddings.filter((wedding) => isDemoClientWorkspace(activeVenue.profile.slug, wedding.accessSlug)),
+    [venueWeddings, activeVenue.profile.slug],
+  )
   const activeWeddingMatchesRoute = !requestedCoupleSlug || activeWedding?.accessSlug === requestedCoupleSlug
   const hasWorkspaceAccess = Boolean(activeWedding && activeWeddingMatchesRoute && (venueAdminAuthenticated || coupleAuthenticatedWeddingId === activeWedding.id || realClientAuthenticated))
 
@@ -462,6 +468,23 @@ export default function App() {
   }
 
   const openFirstCouple = () => { if (venueWeddings[0]) openCoupleByWeddingId(venueWeddings[0].id) }
+
+  const openClientPortal = () => {
+    if (activeVenue.profile.isSample) {
+      openFirstCouple()
+      return
+    }
+
+    const accessSegment = (activeVenue.profile.clientLabel ?? 'client') === 'couple' ? 'couple' : 'client'
+    setCoupleAuthenticatedWeddingId(null)
+    setRealClientAuthenticatedEventId(null)
+    setOwnerAuthenticatedVenueId(null)
+    setRequestedCoupleSlug(CLIENT_PORTAL_SLUG)
+    window.location.hash = `#/venue/${activeVenue.profile.slug}/${accessSegment}`
+    setPage('wedding')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const openMessageContext = (context: MessageContext) => { if (context.kind === 'inventory') { localStorage.setItem('venueVisions.catalogFocus', context.id); navigate('catalog') } else { localStorage.setItem('venueVisions.plannerArea', context.id); navigate('planner') } }
 
   const setQuantity = (itemId: string, requested: number) => {
@@ -572,7 +595,7 @@ export default function App() {
   const selectActiveWedding = (id: string) => { if (venueWeddings.some((wedding) => wedding.id === id)) setActiveWeddingId(id) }
   const openWedding = (id: string, destination: PageKey = 'wedding') => { const wedding = weddings.find((entry) => entry.id === id); if (!wedding) return; setActiveVenueId(wedding.venueId); setActiveWeddingId(id); const venue = venueConfigById(wedding.venueId); const hash = destination === 'admin' ? `#/venue/${venue.profile.slug}/owner` : `#/venue/${venue.profile.slug}/${destination}`; window.location.hash = hash; setPage(destination); setRequestedCoupleSlug(null); window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
-  const addWedding = async (input: { couple: string; date: string; guests: number; packageId: string; primaryEmail: string }): Promise<string | null> => {
+  const addWedding = async (input: { couple: string; date: string; guests: number; packageId: string; primaryEmail: string; partnerEmail?: string }): Promise<string | null> => {
     const eventLabel = activeVenue.profile.eventLabel ?? 'event'
     const clientLabel = activeVenue.profile.clientLabel ?? 'client'
     const cleanCouple = input.couple.trim()
@@ -606,6 +629,7 @@ export default function App() {
             guests: input.guests,
             packageId: input.packageId,
             primaryEmail: input.primaryEmail,
+            partnerEmail: input.partnerEmail,
             ceremonyArea: secondary,
             receptionArea: primary,
           },
@@ -643,7 +667,7 @@ export default function App() {
         ceremonyArea: secondary,
         receptionArea: primary,
         primaryEmail: input.primaryEmail.trim(),
-        partnerEmail: '',
+        partnerEmail: input.partnerEmail?.trim() ?? '',
         contractSigned: true,
         reservationPaid: true,
         notes: '',
@@ -899,6 +923,45 @@ export default function App() {
     scrollToTopAfterAuth()
   }
 
+  const finishGenericClientPortalAccess = async () => {
+    const matches = await claimMyClientEvents(activeVenue.profile.slug)
+    if (!matches.length) {
+      throw new Error(`No active ${activeVenue.profile.eventLabel ?? 'event'} portal is assigned to this email at ${activeVenue.profile.shortName}.`)
+    }
+
+    const databaseWeddings = await listVenueEventWorkspaces(
+      activeVenue.profile.slug,
+      activeVenueId,
+      [],
+    )
+
+    const allowedIds = new Set(matches.map((match) => match.eventId))
+    const accessible = databaseWeddings
+      .filter((wedding) => allowedIds.has(wedding.id) && !wedding.deletedAt && wedding.status !== 'Cancelled')
+      .sort((a, b) => a.profile.date.localeCompare(b.profile.date))
+
+    const target = accessible[0]
+    if (!target) {
+      throw new Error('Your account matched a client record, but the active workspace could not be loaded.')
+    }
+
+    setWeddings((current) => [
+      ...current.filter((wedding) => wedding.venueId !== activeVenueId || isDemoClientWorkspace(activeVenue.profile.slug, wedding.accessSlug)),
+      ...accessible,
+    ])
+    setActiveWeddingId(target.id)
+    setCoupleAuthenticatedWeddingId(target.id)
+    setRealClientAuthenticatedEventId(target.id)
+    setOwnerAuthenticatedVenueId(null)
+    setPlatformAuthenticated(false)
+    setRequestedCoupleSlug(target.accessSlug)
+
+    const accessSegment = (activeVenue.profile.clientLabel ?? 'client') === 'couple' ? 'couple' : 'client'
+    window.location.hash = `#/venue/${activeVenue.profile.slug}/${accessSegment}/${encodeURIComponent(target.accessSlug)}`
+    setPage('wedding')
+    scrollToTopAfterAuth()
+  }
+
   const authenticateRealClient = async (email: string, password: string, accessSlug: string): Promise<{ ok: boolean; error?: string }> => {
     if (!supabase) return { ok: false, error: 'Secure client authentication is not configured on this deployment.' }
     if (!email) return { ok: false, error: 'Enter your email address.' }
@@ -906,7 +969,8 @@ export default function App() {
 
     try {
       await signInWithPassword(email.toLowerCase(), password)
-      await finishRealClientAccess(accessSlug)
+      if (accessSlug === CLIENT_PORTAL_SLUG) await finishGenericClientPortalAccess()
+      else await finishRealClientAccess(accessSlug)
       return { ok: true }
     } catch (error) {
       try { await signOutSupabase() } catch { /* preserve the useful sign-in error */ }
@@ -922,7 +986,9 @@ export default function App() {
     if (password.length < 8) return { ok: false, error: 'Use a password with at least 8 characters.' }
 
     try {
-      const signup = await signUpWithPassword(email.toLowerCase(), password)
+      const accessSegment = (activeVenue.profile.clientLabel ?? 'client') === 'couple' ? 'couple' : 'client'
+      const signupRedirect = `${window.location.origin}${window.location.pathname}#/venue/${activeVenue.profile.slug}/${accessSegment}${accessSlug === CLIENT_PORTAL_SLUG ? '' : `/${encodeURIComponent(accessSlug)}`}`
+      const signup = await signUpWithPassword(email.toLowerCase(), password, signupRedirect)
       if (signup.user && Array.isArray(signup.user.identities) && signup.user.identities.length === 0) {
         return { ok: false, error: 'An account already exists for that email. Use Sign in instead.' }
       }
@@ -935,7 +1001,8 @@ export default function App() {
         }
       }
 
-      await finishRealClientAccess(accessSlug)
+      if (accessSlug === CLIENT_PORTAL_SLUG) await finishGenericClientPortalAccess()
+      else await finishRealClientAccess(accessSlug)
       return { ok: true }
     } catch (error) {
       return { ok: false, error: error instanceof Error ? error.message : 'Unable to create the client account.' }
@@ -1003,14 +1070,14 @@ export default function App() {
     <div className="app-shell" style={{ '--venue-primary': activeVenue.profile.brandPrimary, '--venue-accent': activeVenue.profile.brandAccent, '--venue-surface': activeVenue.profile.brandSurface ?? '#f5f5f5', '--venue-text': activeVenue.profile.brandText ?? activeVenue.profile.brandPrimary } as CSSProperties}>
       <Header page={page} onNavigate={navigate} selectionCount={selectionCount} unreadMessages={unreadMessages} activeWeddingName={profile?.couple ?? ''} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} activeVenue={activeVenue.profile} ownerAuthenticated={venueAdminAuthenticated} coupleAuthenticated={coupleAuthenticatedWeddingId === activeWedding?.id} platformAuthenticated={platformAuthenticated} onSelectWedding={selectActiveWedding} onOwnerLogout={logoutOwner} onCoupleLogout={logoutCouple} onPlatformLogout={logoutPlatform} onResetPreview={resetPreview} />
 
-      {showCoupleGate && <CoupleAccess wedding={accessWedding} venueId={activeVenueId} accessSlug={clientAccessSlug} demoMode={demoClientRoute} onSubmitCode={authenticateDemoCouple} onSignIn={authenticateRealClient} onCreateAccount={registerRealClient} onBackHome={() => navigate('venue')} />}
+      {showCoupleGate && <CoupleAccess wedding={accessWedding} venueId={activeVenueId} accessSlug={clientAccessSlug} demoMode={demoClientRoute} portalMode={clientAccessSlug === CLIENT_PORTAL_SLUG} demoWeddings={clientPortalDemoWeddings.map((wedding) => ({ id: wedding.id, name: wedding.profile.couple, date: wedding.profile.date }))} onOpenDemo={openCoupleByWeddingId} onSubmitCode={authenticateDemoCouple} onSignIn={authenticateRealClient} onCreateAccount={registerRealClient} onBackHome={() => navigate('venue')} />}
       {showOwnerGate && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={venueAdminAuthenticated} authLoading={ownerAuthLoading} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} platformAdminAccess={platformAuthenticated} />}
 
       {!showCoupleGate && !showOwnerGate && page === 'home' && <Home onNavigate={navigate} onOpenVenue={openVenueBySlug} venues={venueConfigs} />}
       {!showCoupleGate && !showOwnerGate && page === 'venues' && <Venues venues={venueConfigs} weddings={weddings} onOpenVenue={openVenueBySlug} onOpenCouple={openCoupleBySlug} onForVenues={() => navigate('for-venues')} />}
       {!showCoupleGate && !showOwnerGate && page === 'for-venues' && <ForVenues leads={venueLeads} setLeads={setVenueLeads} onBackHome={() => navigate('home')} onViewVenueDemo={() => navigate('venues')} />}
-      {!showCoupleGate && !showOwnerGate && page === 'signin' && <SignIn venues={venueConfigs} activeVenueId={activeVenueId} onSelectVenue={selectVenue} onVenueOwner={() => navigate('admin')} onCouple={openFirstCouple} onBackHome={() => navigate('home')} />}
-      {!showCoupleGate && !showOwnerGate && page === 'venue' && <VenuePortal venueId={activeVenueId} weddings={venueWeddings} onNavigate={navigate} onOpenCouple={openCoupleByWeddingId} />}
+      {!showCoupleGate && !showOwnerGate && page === 'signin' && <SignIn venues={venueConfigs} activeVenueId={activeVenueId} onSelectVenue={selectVenue} onVenueOwner={() => navigate('admin')} onCouple={openClientPortal} onBackHome={() => navigate('home')} />}
+      {!showCoupleGate && !showOwnerGate && page === 'venue' && <VenuePortal venueId={activeVenueId} weddings={venueWeddings} onNavigate={navigate} onOpenCouple={openCoupleByWeddingId} onOpenClientPortal={openClientPortal} />}
       {!showCoupleGate && !showOwnerGate && page === 'catalog' && <Catalog venueId={activeVenueId} selections={selections} onSetQuantity={setQuantity} canEdit={hasWorkspaceAccess} onRequireAccess={openFirstCouple} packageTier={packageInfo.tier} packageName={packageInfo.name} onNavigate={navigate} />}
       {!showCoupleGate && !showOwnerGate && page === 'wedding' && profile && activeWedding && <Wedding venueId={activeVenueId} profile={profile} selections={selections} unreadMessages={unreadMessages} paymentStepsCompleted={activeWedding.paymentStepsCompleted} onProfileChange={updateProfile} onSetQuantity={setQuantity} onNavigate={navigate} ownerMode={venueAdminAuthenticated} clientAuthenticated={realClientAuthenticated} />}
       {!showCoupleGate && !showOwnerGate && page === 'planner' && profile && <Planner venueId={activeVenueId} selections={selections} placedItems={placedItems} setPlacedItems={setPlacedItems} onSetQuantity={setQuantity} packageTier={packageInfo.tier} preferredAreaId={profile.receptionArea || activeVenue.areas[0]?.id} onNavigate={navigate} />}
