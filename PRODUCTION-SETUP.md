@@ -131,3 +131,40 @@ This creates `email_delivery_log`. Venue staff and platform admins can read deli
 - A real client message sends venue/staff email notification only after the message is saved.
 - Message notifications are idempotent by event + app message ID + recipient.
 - Email failure never rolls back an already-saved planning message.
+## 9. Production access diagnostics
+
+Apply `supabase/migrations/202608280009_production_security.sql`.
+
+The migration:
+- blocks cross-venue client/package/space/inventory/media references at the database layer
+- hardens RLS checks around selections, layouts and media
+- adds `permission_self_test()` for the currently authenticated account
+- adds `production_security_audit()` for platform administrators
+
+VV Admin → **Production Check** displays both the current platform-admin RLS test and the all-tenant integrity audit.
+
+For owner/client role testing, sign in as that role and open:
+
+`https://viviavisions.com/#/access-check`
+
+Every row should pass.
+
+## 10. Demo separation
+
+The three Chandelier Oaks showcase weddings remain available from the public venue page with demo codes. They are intentionally separated from the real Couple Portal. Real client sign-in no longer includes a Demo Events selector.
+
+## 11. Automated browser smoke testing
+
+Playwright checks the public ViviaVisions flow in desktop Chromium and an iPhone-sized viewport.
+
+Local/CI command:
+
+```powershell
+npm run smoke
+```
+
+GitHub Actions now runs:
+- smoke tests during `Quality`
+- a second live smoke against `https://viviavisions.com` after GitHub Pages deploys successfully
+
+See `LAUNCH-TEST-MATRIX.md` for the one-time production role test.

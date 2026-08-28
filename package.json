@@ -1,7 +1,7 @@
 {
   "name": "viviavisions",
   "private": true,
-  "version": "1.14.0",
+  "version": "1.15.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.app.json",
     "check": "npm run typecheck && npm run build",
-    "security": "npm audit --omit=dev --audit-level=high"
+    "security": "npm audit --omit=dev --audit-level=high",
+    "smoke": "playwright test",
+    "smoke:list": "playwright test --list"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0",
@@ -17,6 +19,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.0.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",

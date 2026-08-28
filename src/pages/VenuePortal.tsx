@@ -43,7 +43,10 @@ export default function VenuePortal({ venueId, weddings, onNavigate, onOpenCoupl
             <p>{heroBody}</p>
             <div className="hero__actions">
               {isChandelier
-                ? <button className="button button--venue" onClick={onOpenClientPortal}>Open Couple Portal</button>
+                ? <>
+                    <button className="button button--venue" data-testid="real-client-portal" onClick={onOpenClientPortal}>Open Couple Portal</button>
+                    <button className="button button--venue-ghost" onClick={() => document.getElementById('chandelier-demo-showcase')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>View Demo Weddings</button>
+                  </>
                 : firstEvent && <button className="button button--venue" onClick={() => onOpenCouple(firstEvent.id)}>{`Enter a ${clientLabel} workspace`}</button>}
               <button className="button button--venue-ghost" onClick={() => onNavigate('admin')}>{isChandelier ? 'Owner Portal' : 'Venue owner preview'}</button>
             </div>
@@ -100,10 +103,33 @@ export default function VenuePortal({ venueId, weddings, onNavigate, onOpenCoupl
         </div>
       </section>
 
-      <section className="section shell venue-couple-preview-section">
-        <div className="section-heading"><div><p className="eyebrow">{isChandelier ? 'COUPLE PLANNING PORTALS' : `PRIVATE ${eventLabel.toUpperCase()} WORKSPACES`}</p><h2>{isChandelier ? 'Each Chandelier Oaks wedding gets its own planning workspace.' : `Every ${clientLabel} stays inside ${venue.shortName}.`}</h2><p className="section-lead">{isChandelier ? 'Package, selections, messages, layouts, media and setup information stay isolated to that couple and wedding date.' : `These workspaces are separate from every other venue in ${PLATFORM_NAME}.`}</p></div></div>
-        <div className="venue-couple-preview-grid">{publicShowcaseWeddings.map((event) => <button key={event.id} onClick={() => onOpenCouple(event.id)}><span>{event.status}</span><strong>{event.profile.couple}</strong><small>{new Date(`${event.profile.date}T12:00:00`).toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}</small><b>Open workspace →</b></button>)}</div>
-      </section>
+      {isChandelier ? (
+        <section id="chandelier-demo-showcase" data-testid="demo-showcase" className="section shell venue-couple-preview-section venue-demo-showcase">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">VIVIAVISIONS DEMO SHOWCASE</p>
+              <h2>Try a complete Chandelier Oaks planning workspace.</h2>
+              <p className="section-lead">These three fictional weddings are intentionally public demonstrations. Real Chandelier Oaks couples use the private Couple Portal above and never appear in this showcase.</p>
+            </div>
+          </div>
+          <div className="venue-couple-preview-grid">
+            {publicShowcaseWeddings.map((event) => (
+              <button className="demo-showcase-card" key={event.id} onClick={() => onOpenCouple(event.id)}>
+                <span>DEMO · {event.status}</span>
+                <strong>{event.profile.couple}</strong>
+                <small>{new Date(`${event.profile.date}T12:00:00`).toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}</small>
+                <small className="demo-showcase-code">Demo code: <b>{event.accessCode}</b></small>
+                <b>Open demo workspace →</b>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section className="section shell venue-couple-preview-section">
+          <div className="section-heading"><div><p className="eyebrow">{`PRIVATE ${eventLabel.toUpperCase()} WORKSPACES`}</p><h2>{`Every ${clientLabel} stays inside ${venue.shortName}.`}</h2><p className="section-lead">{`These workspaces are separate from every other venue in ${PLATFORM_NAME}.`}</p></div></div>
+          <div className="venue-couple-preview-grid">{publicShowcaseWeddings.map((event) => <button key={event.id} onClick={() => onOpenCouple(event.id)}><span>{event.status}</span><strong>{event.profile.couple}</strong><small>{new Date(`${event.profile.date}T12:00:00`).toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}</small><b>Open workspace →</b></button>)}</div>
+        </section>
+      )}
 
       <section className="venue-contact-strip venue-contact-strip--dynamic">
         <div className="shell venue-contact-strip__inner">

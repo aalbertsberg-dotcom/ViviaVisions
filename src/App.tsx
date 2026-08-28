@@ -19,6 +19,8 @@ import ManageEvents from './pages/ManageEvents'
 import PlatformAdmin from './pages/PlatformAdmin'
 import InventoryManager from './pages/InventoryManager'
 import VenueContentManager from './pages/VenueContentManager'
+import ProductionCheck from './pages/ProductionCheck'
+import AccessCheck from './pages/AccessCheck'
 import { PLATFORM_NAME, POWERED_BY_PLATFORM, platformConfig } from './config/platform'
 import { isDemoClientWorkspace } from './config/demo'
 import { buildPublicAppUrl } from './config/runtime'
@@ -94,7 +96,7 @@ function parseRoute(): RouteState {
     if (parts[2] && scopedPages.includes(parts[2] as PageKey)) return { page: parts[2] as PageKey, coupleSlug: null, venueSlug }
     return { page: 'venue', coupleSlug: null, venueSlug }
   }
-  const allowed: PageKey[] = ['home','venues','for-venues','signin','platform','platform-inventory']
+  const allowed: PageKey[] = ['home','venues','for-venues','signin','platform','platform-inventory','production-check','access-check']
   return { page: allowed.includes(parts[0] as PageKey) ? parts[0] as PageKey : 'home', coupleSlug: null, venueSlug: null }
 }
 
@@ -199,10 +201,6 @@ export default function App() {
   const databaseWorkspaceSession = databaseOwnerSession || realClientAuthenticated
   const clientAccessSlug = requestedCoupleSlug ?? accessWedding?.accessSlug ?? ''
   const demoClientRoute = isDemoClientWorkspace(activeVenue.profile.slug, clientAccessSlug)
-  const clientPortalDemoWeddings = useMemo(
-    () => venueWeddings.filter((wedding) => isDemoClientWorkspace(activeVenue.profile.slug, wedding.accessSlug)),
-    [venueWeddings, activeVenue.profile.slug],
-  )
   const activeWeddingMatchesRoute = !requestedCoupleSlug || activeWedding?.accessSlug === requestedCoupleSlug
   const hasWorkspaceAccess = Boolean(activeWedding && activeWeddingMatchesRoute && (venueAdminAuthenticated || coupleAuthenticatedWeddingId === activeWedding.id || realClientAuthenticated))
 
@@ -389,7 +387,7 @@ export default function App() {
 
   const routeFor = (next: PageKey) => {
     if (next === 'home') return '#/'
-    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-inventory') return `#/${next}`
+    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-inventory' || next === 'production-check' || next === 'access-check') return `#/${next}`
     if (next === 'venue') return `#/venue/${activeVenue.profile.slug}`
     if (next === 'admin') return `#/venue/${activeVenue.profile.slug}/owner`
     return `#/venue/${activeVenue.profile.slug}/${next}`
@@ -1094,7 +1092,7 @@ export default function App() {
     <div className="app-shell" style={{ '--venue-primary': activeVenue.profile.brandPrimary, '--venue-accent': activeVenue.profile.brandAccent, '--venue-surface': activeVenue.profile.brandSurface ?? '#f5f5f5', '--venue-text': activeVenue.profile.brandText ?? activeVenue.profile.brandPrimary } as CSSProperties}>
       <Header page={page} onNavigate={navigate} selectionCount={selectionCount} unreadMessages={unreadMessages} activeWeddingName={profile?.couple ?? ''} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} activeVenue={activeVenue.profile} ownerAuthenticated={venueAdminAuthenticated} coupleAuthenticated={coupleAuthenticatedWeddingId === activeWedding?.id} platformAuthenticated={platformAuthenticated} onSelectWedding={selectActiveWedding} onOwnerLogout={logoutOwner} onCoupleLogout={logoutCouple} onPlatformLogout={logoutPlatform} onResetPreview={resetPreview} />
 
-      {showCoupleGate && <CoupleAccess wedding={accessWedding} venueId={activeVenueId} accessSlug={clientAccessSlug} demoMode={demoClientRoute} portalMode={clientAccessSlug === CLIENT_PORTAL_SLUG} demoWeddings={clientPortalDemoWeddings.map((wedding) => ({ id: wedding.id, name: wedding.profile.couple, date: wedding.profile.date }))} onOpenDemo={openCoupleByWeddingId} onSubmitCode={authenticateDemoCouple} onSignIn={authenticateRealClient} onCreateAccount={registerRealClient} onBackHome={() => navigate('venue')} />}
+      {showCoupleGate && <CoupleAccess wedding={accessWedding} venueId={activeVenueId} accessSlug={clientAccessSlug} demoMode={demoClientRoute} portalMode={clientAccessSlug === CLIENT_PORTAL_SLUG} onSubmitCode={authenticateDemoCouple} onSignIn={authenticateRealClient} onCreateAccount={registerRealClient} onBackHome={() => navigate('venue')} />}
       {showOwnerGate && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={venueAdminAuthenticated} authLoading={ownerAuthLoading} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} platformAdminAccess={platformAuthenticated} />}
 
       {!showCoupleGate && !showOwnerGate && page === 'home' && <Home onNavigate={navigate} onOpenVenue={openVenueBySlug} venues={venueConfigs} />}
@@ -1119,6 +1117,11 @@ export default function App() {
         ? <InventoryManager venues={venueConfigs} initialVenueId={activeVenueId} platformMode onBack={() => navigate('platform')} />
         : <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={dedupedWeddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} onManageVenue={openVenueAsPlatformAdmin} />
       )}
+      {page === 'production-check' && (platformAuthenticated
+        ? <ProductionCheck onBack={() => navigate('platform')} />
+        : <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={dedupedWeddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} onManageVenue={openVenueAsPlatformAdmin} />
+      )}
+      {page === 'access-check' && <AccessCheck />}
 
       <footer className="site-footer saas-footer">
         <div className="shell">

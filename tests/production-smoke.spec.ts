@@ -1,0 +1,39 @@
+import { expect, test } from '@playwright/test'
+
+test('Chandelier Oaks separates real client sign-in from showcase demos', async ({ page }) => {
+  await page.goto('/#/venue/chandelier-oaks')
+
+  await expect(page.getByRole('heading', { name: /Plan your event at Chandelier Oaks/i })).toBeVisible()
+  await expect(page.getByTestId('real-client-portal')).toBeVisible()
+
+  const showcase = page.getByTestId('demo-showcase')
+  await expect(showcase).toBeVisible()
+  await expect(showcase).toContainText('Sarah & John')
+  await expect(showcase).toContainText('Ashley & Mark')
+  await expect(showcase).toContainText('Jennifer & Matt')
+  await expect(showcase).toContainText('111111')
+  await expect(showcase).toContainText('222222')
+  await expect(showcase).toContainText('333333')
+
+  await page.getByTestId('real-client-portal').click()
+  await expect(page).toHaveURL(/#\/venue\/chandelier-oaks\/couple$/)
+  await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Create account' })).toBeVisible()
+  await expect(page.getByText(/email address from your invitation/i).first()).toBeVisible()
+  await expect(page.getByText('Demo Events')).toHaveCount(0)
+})
+
+test('direct Chandelier Oaks demo access remains available', async ({ page }) => {
+  await page.goto('/#/venue/chandelier-oaks/couple/sarah-john')
+  await expect(page.getByRole('heading', { name: 'Sarah & John' })).toBeVisible()
+  await expect(page.getByText(/Demo code:/)).toContainText('111111')
+  await expect(page.getByRole('button', { name: /Enter demo workspace/i })).toBeVisible()
+})
+
+test('public pages do not overflow horizontally', async ({ page }) => {
+  for (const route of ['/#/', '/#/venue/chandelier-oaks', '/#/venue/chandelier-oaks/couple']) {
+    await page.goto(route)
+    const fitsViewport = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)
+    expect(fitsViewport, `${route} should fit the viewport`).toBe(true)
+  }
+})

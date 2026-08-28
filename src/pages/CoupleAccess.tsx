@@ -19,8 +19,7 @@ type CoupleAccessProps = {
   accessSlug: string
   demoMode: boolean
   portalMode?: boolean
-  demoWeddings?: Array<{ id: string; name: string; date: string }>
-  onOpenDemo?: (id: string) => void
+
   onSubmitCode: (code: string) => boolean
   onSignIn: (email: string, password: string, accessSlug: string) => Promise<ClientAuthResult>
   onCreateAccount: (email: string, password: string, accessSlug: string) => Promise<ClientAuthResult>
@@ -49,8 +48,7 @@ export default function CoupleAccess({
   accessSlug,
   demoMode,
   portalMode = false,
-  demoWeddings = [],
-  onOpenDemo,
+
   onSubmitCode,
   onSignIn,
   onCreateAccount,
@@ -64,7 +62,7 @@ export default function CoupleAccess({
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [createMode, setCreateMode] = useState(false)
-  const [showDemoEvents, setShowDemoEvents] = useState(false)
+
   const [recoveryMode, setRecoveryMode] = useState(hasRecoveryMarker)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -178,7 +176,7 @@ export default function CoupleAccess({
             : recoveryMode
               ? 'Choose a new password for your private client account.'
               : portalMode
-              ? `Sign in with your ${venue.shortName} client account. Your email determines which private ${eventLabel} workspace you can open.`
+              ? `Use the email address from your invitation. We will open the private ${eventLabel} workspace connected to that email automatically.`
               : `Sign in with an email address that ${venue.shortName} has on file for this ${eventLabel}. Each approved contact gets their own private access.`}
         </p>
 
@@ -221,45 +219,16 @@ export default function CoupleAccess({
 
               {!createMode && <button className="text-link client-forgot-password" type="button" onClick={() => { void requestPasswordReset() }} disabled={submitting}>Forgot password?</button>}
 
-              <small>{createMode ? 'Use the same email address the venue has on the event. Email confirmation may be required.' : portalMode ? `Only emails assigned to an active ${eventLabel} at ${venue.shortName} can open a workspace.` : `Only contacts assigned to this ${eventLabel} can open the workspace.`}</small>
+              <small>{createMode ? 'First visit? Create your account with the same email address that received the venue invitation. Email confirmation may be required.' : portalMode ? `No event code is needed. Sign in with the email address ${venue.shortName} has assigned to your active ${eventLabel}.` : `Only contacts assigned to this ${eventLabel} can open the workspace.`}</small>
 
               {error && <div className="owner-access-error" role="alert">{error}</div>}
               {status && <div className="client-auth-status" role="status">{status}</div>}
 
               <button className="button button--primary full-width" type="submit" disabled={submitting}>
-                {submitting ? 'Please wait…' : createMode ? 'Create private account' : `Sign in to ${venue.shortName}`}
+                {submitting ? 'Please wait…' : createMode ? 'Create private account' : portalMode ? `Sign in to my ${eventLabel}` : `Sign in to ${venue.shortName}`}
               </button>
             </form>
 
-            {portalMode && demoWeddings.length > 0 && (
-              <div className="demo-event-access">
-                <button
-                  className="button button--ghost full-width demo-event-access__toggle"
-                  type="button"
-                  onClick={() => setShowDemoEvents((current) => !current)}
-                >
-                  Demo Events
-                  <span aria-hidden="true">{showDemoEvents ? '▲' : '▼'}</span>
-                </button>
-
-                {showDemoEvents && (
-                  <div className="demo-event-access__list">
-                    <small>Temporary showcase access. Choose one of the three demo weddings:</small>
-                    {demoWeddings.map((demo) => (
-                      <button
-                        key={demo.id}
-                        className="demo-event-access__item"
-                        type="button"
-                        onClick={() => onOpenDemo?.(demo.id)}
-                      >
-                        <span>{demo.name}</span>
-                        <small>{formatDate(demo.date)}</small>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </>
         )}
 
@@ -268,7 +237,7 @@ export default function CoupleAccess({
           {demoMode
             ? 'These three showcase workspaces keep their visible access codes for demonstrations.'
             : portalMode
-              ? `Your email is matched only to active ${eventLabel} records assigned to you at ${venue.shortName}.`
+              ? `Use the email from your invitation. No access code is needed, and other client workspaces remain private.`
               : 'Your signed-in account is matched to the primary or partner email stored on this event. Other venue clients remain inaccessible.'}
         </div>
         <button className="text-link owner-access-back" type="button" onClick={onBackHome}>← Back to {venue.shortName}</button>

@@ -4,7 +4,7 @@ import Logo from './Logo'
 import type { VenueProfile, WeddingWorkspace } from '../types'
 import { PLATFORM_NAME, PLATFORM_NAME_UPPER, PLATFORM_SHORT_NAME, POWERED_BY_PLATFORM } from '../config/platform'
 
-export type PageKey = 'home' | 'venues' | 'for-venues' | 'signin' | 'venue' | 'catalog' | 'wedding' | 'planner' | 'media' | 'ai-preview' | 'messages' | 'calendar' | 'summary' | 'admin' | 'manage-events' | 'inventory-admin' | 'venue-content' | 'platform' | 'platform-inventory'
+export type PageKey = 'home' | 'venues' | 'for-venues' | 'signin' | 'venue' | 'catalog' | 'wedding' | 'planner' | 'media' | 'ai-preview' | 'messages' | 'calendar' | 'summary' | 'admin' | 'manage-events' | 'inventory-admin' | 'venue-content' | 'platform' | 'platform-inventory' | 'production-check' | 'access-check'
 
 type HeaderProps = {
   page: PageKey
@@ -105,13 +105,14 @@ export default function Header({
   const platformNav: NavItem[] = [
     { key: 'platform', label: 'Admin' },
     { key: 'platform-inventory', label: 'Inventory' },
+    { key: 'production-check', label: 'Production Check' },
     { key: 'venues', label: 'Venue Accounts' },
     { key: 'for-venues', label: 'Requests' },
   ]
 
   const hrefFor = (next: PageKey) => {
     if (next === 'home') return '#/'
-    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-inventory') return `#/${next}`
+    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-inventory' || next === 'production-check' || next === 'access-check') return `#/${next}`
     if (next === 'venue') return `#/venue/${activeVenue.slug}`
     if (next === 'admin') return `#/venue/${activeVenue.slug}/owner`
     return `#/venue/${activeVenue.slug}/${next}`

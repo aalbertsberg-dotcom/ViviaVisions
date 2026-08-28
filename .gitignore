@@ -10,3 +10,6 @@ apply-v*.cjs
 # Supabase Edge Function secrets
 supabase/functions/.env
 supabase/.temp/
+# Browser smoke-test artifacts
+playwright-report/
+test-results/

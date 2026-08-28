@@ -1,4 +1,4 @@
-# ViviaVisions v1.14.0
+# ViviaVisions v1.15.0
 
 **Every detail. Every option. Every vision.**
 
@@ -27,6 +27,10 @@ ViviaVisions is a multi-tenant venue planning platform built with React, TypeScr
 - Resend-powered client invitation emails through a Supabase Edge Function
 - automatic transactional email notifications after real messages are saved
 - server-side delivery logging and duplicate-message protection
+- cross-tenant relationship guards and current-session RLS regression checks
+- VV Admin Production Check dashboard
+- dedicated demo showcase separated from real client sign-in
+- Playwright desktop/mobile smoke tests locally and against the live production domain
 
 ## Local development
 

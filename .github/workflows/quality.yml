@@ -29,5 +29,11 @@ jobs:
       - name: Typecheck and build
         run: npm run check
 
+      - name: Install Chromium for smoke tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Public desktop/mobile smoke tests
+        run: npm run smoke
+
       - name: Audit production dependencies
         run: npm run security
