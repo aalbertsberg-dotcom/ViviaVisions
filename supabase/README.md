@@ -41,3 +41,17 @@ The production conversion should happen feature by feature:
 8. media storage
 
 Chandelier Oaks should be the first tenant migrated from `src/data.ts` after the schema is running.
+
+## Transactional email
+
+`functions/send-event-email` is the server-only Resend gateway for:
+
+- client portal invitation emails
+- new client-to-venue message notifications
+- new venue-to-client message notifications
+
+The browser invokes the function with the current Supabase session. The function re-validates event access, calculates recipients server-side, keeps the Resend key in Edge Function secrets, and writes delivery history to `email_delivery_log`.
+
+Apply `migrations/202608280008_email_notifications.sql` before deploying the function.
+
+Do not put `RESEND_API_KEY` or `SUPABASE_SERVICE_ROLE_KEY` in the React app, GitHub Pages environment, or any `VITE_` variable.

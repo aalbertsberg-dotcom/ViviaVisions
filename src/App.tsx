@@ -26,6 +26,7 @@ import { supabase } from './lib/supabase'
 import { claimClientEventAccess, claimMyClientEvents, getVenueStaffAccessBySlug, signInWithPassword, signOut as signOutSupabase, signUpWithPassword } from './lib/repositories/auth'
 import { appendClientEventMessages, cancelVenueEvent, createVenueEventWorkspace, listVenueEventWorkspaces, markClientEventMessagesRead, permanentDeleteVenueEvent, reopenVenueEvent, resetEventPlanning, restoreVenueEvent, saveClientEventPlanningProfile, saveEventLayoutItems, saveEventMessages, saveEventProfile, setEventSelection, softDeleteVenueEvent } from './lib/repositories/events'
 import { loadVenueConfigFromSupabase } from './lib/repositories/venueConfig'
+import { sendNewMessageNotification } from './lib/repositories/notifications'
 import CoupleAccess from './pages/CoupleAccess'
 import { applyVenueConfigOverride, chandelierOaks, foundryRivergate, itemAllowedForTier, juniperStone, packageById, venueConfigById, venueConfigBySlug, venueConfigs } from './data'
 import type { MessageContext, MessageRole, PlacedItem, VenueLead, WeddingMessage, WeddingProfile, WeddingStatus, WeddingWorkspace } from './types'
@@ -575,22 +576,40 @@ export default function App() {
   const setMessages = (next: WeddingMessage[] | ((current: WeddingMessage[]) => WeddingMessage[])) => {
     if (!hasWorkspaceAccess || !activeWedding) return
     const nextMessages = typeof next === 'function' ? next(activeWedding.messages) : next
+    const existingIds = new Set(activeWedding.messages.map((message) => message.id))
+    const addedMessages = nextMessages.filter((message) => !existingIds.has(message.id))
 
     updateActiveWedding((wedding) => ({ ...wedding, messages: nextMessages }))
 
+    const notifySavedMessages = async (eventId: string, savedMessages: WeddingMessage[]) => {
+      for (const message of savedMessages) {
+        try {
+          await sendNewMessageNotification(eventId, message.id)
+        } catch (notificationError) {
+          console.error('The message was saved, but its email notification could not be sent.', notificationError)
+        }
+      }
+    }
+
     if (databaseOwnerSession) {
-      void saveEventMessages(activeWedding.id, nextMessages).catch((error) => {
-        console.error('Unable to save messages to Supabase.', error)
-        window.alert('The message changed on screen, but it could not be saved to the database. Please refresh and try again.')
-      })
-    } else if (realClientAuthenticated) {
-      const existingIds = new Set(activeWedding.messages.map((message) => message.id))
-      const addedMessages = nextMessages.filter((message) => !existingIds.has(message.id) && message.senderRole !== 'venue')
-      if (addedMessages.length) {
-        void appendClientEventMessages(activeWedding.id, addedMessages).catch((error) => {
-          console.error('Unable to save the client message to Supabase.', error)
-          window.alert('Your message could not be saved. Please refresh and try again.')
+      const eventId = activeWedding.id
+      const venueMessages = addedMessages.filter((message) => message.senderRole === 'venue')
+      void saveEventMessages(eventId, nextMessages)
+        .then(() => notifySavedMessages(eventId, venueMessages))
+        .catch((error) => {
+          console.error('Unable to save messages to Supabase.', error)
+          window.alert('The message changed on screen, but it could not be saved to the database. Please refresh and try again.')
         })
+    } else if (realClientAuthenticated) {
+      const eventId = activeWedding.id
+      const clientMessages = addedMessages.filter((message) => message.senderRole !== 'venue')
+      if (clientMessages.length) {
+        void appendClientEventMessages(eventId, clientMessages)
+          .then(() => notifySavedMessages(eventId, clientMessages))
+          .catch((error) => {
+            console.error('Unable to save the client message to Supabase.', error)
+            window.alert('Your message could not be saved. Please refresh and try again.')
+          })
       }
     }
   }

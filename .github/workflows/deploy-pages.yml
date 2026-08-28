@@ -30,6 +30,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: https://lvkjwlvsirlcgjapokjd.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_qrBWBMsfXZT89x33tk0LVA_BfdaQSO1
+          VITE_PUBLIC_APP_URL: https://viviavisions.com/
         run: npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v5

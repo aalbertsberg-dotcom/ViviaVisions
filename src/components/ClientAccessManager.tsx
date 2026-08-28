@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getEventClientAccessStatus, sendPasswordReset, setEventClientAccess, type ClientAccessStatus } from '../lib/repositories/auth'
+import { sendClientInvitation } from '../lib/repositories/notifications'
 
 type ClientAccessManagerProps = {
   eventId: string
@@ -70,6 +71,21 @@ export default function ClientAccessManager({ eventId, primaryEmail, partnerEmai
     }
   }
 
+  const sendInvite = async (contact: ClientAccessStatus) => {
+    setBusyAction(`invite:${contact.email}`)
+    setError('')
+    setNotice('')
+
+    try {
+      const result = await sendClientInvitation(eventId, contact.email)
+      setNotice(result.message || `Invitation email sent to ${contact.email}.`)
+    } catch (inviteError) {
+      setError(inviteError instanceof Error ? inviteError.message : 'Unable to send the client invitation.')
+    } finally {
+      setBusyAction('')
+    }
+  }
+
   const sendReset = async (contact: ClientAccessStatus) => {
     setBusyAction(`reset:${contact.email}`)
     setError('')
@@ -92,7 +108,7 @@ export default function ClientAccessManager({ eventId, primaryEmail, partnerEmai
       <div className="client-access-manager__heading client-access-manager__heading--actions">
         <div>
           <strong>Client accounts</strong>
-          <small>{contacts.length ? `${activeCount} active of ${contacts.length} configured contact${contacts.length === 1 ? '' : 's'}.` : 'Each listed contact can use their own Supabase account.'}</small>
+          <small>{contacts.length ? `${activeCount} active of ${contacts.length} configured contact${contacts.length === 1 ? '' : 's'}. Invitations use the venue's transactional email service.` : 'Each listed contact can use their own Supabase account.'}</small>
         </div>
         <button className="text-link" type="button" disabled={loading} onClick={() => { void refresh() }}>Refresh</button>
       </div>
@@ -107,6 +123,7 @@ export default function ClientAccessManager({ eventId, primaryEmail, partnerEmai
 
       {!loading && contacts.map((contact) => {
         const accessBusy = busyAction === `access:${contact.email}`
+        const inviteBusy = busyAction === `invite:${contact.email}`
         const resetBusy = busyAction === `reset:${contact.email}`
 
         return (
@@ -118,6 +135,17 @@ export default function ClientAccessManager({ eventId, primaryEmail, partnerEmai
             </div>
 
             <div className="client-access-contact__actions">
+              {!contact.revoked && (
+                <button
+                  className="button button--small button--primary"
+                  type="button"
+                  disabled={Boolean(busyAction)}
+                  onClick={() => { void sendInvite(contact) }}
+                >
+                  {inviteBusy ? 'Sending…' : contact.accountExists ? 'Resend invite' : 'Send invite'}
+                </button>
+              )}
+
               {contact.accountExists && !contact.revoked && (
                 <button
                   className="button button--small button--ghost"

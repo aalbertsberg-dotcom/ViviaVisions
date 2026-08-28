@@ -6,3 +6,7 @@ dist
 # Local ChatGPT/update helper scripts
 ViviaVisions-v*.ps1
 apply-v*.cjs
+
+# Supabase Edge Function secrets
+supabase/functions/.env
+supabase/.temp/

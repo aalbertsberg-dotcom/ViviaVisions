@@ -79,3 +79,55 @@ Before customer launch:
 - verify no `.env.local`, service-role keys, passwords or customer exports are committed
 - verify the public domain works for signup confirmation and password recovery
 - test owner, platform-admin, primary-client and partner-client sign-out/sign-in in separate private browser sessions
+## 8. Resend transactional email
+
+ViviaVisions uses two Resend paths:
+
+1. **Supabase Auth email** — connect Resend to Supabase Auth/SMTP for confirmation and password-reset emails.
+2. **Application transactional email** — `supabase/functions/send-event-email` sends client invitations and new-message notifications.
+
+### Resend setup
+
+1. Create a Resend account.
+2. Verify the domain you will send from.
+3. Create a Resend API key.
+4. In **Supabase → Edge Functions → Secrets**, configure:
+
+```text
+RESEND_API_KEY=re_...
+VIVIAVISIONS_EMAIL_FROM=ViviaVisions <notifications@yourdomain.com>
+VIVIAVISIONS_EMAIL_REPLY_TO=hello@yourdomain.com
+VIVIAVISIONS_APP_URL=https://YOUR_PUBLIC_DOMAIN/
+```
+
+`VIVIAVISIONS_EMAIL_REPLY_TO` is optional.
+
+The Supabase project automatically provides `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEYS`, and `SUPABASE_SECRET_KEYS` to hosted Edge Functions. The publishable/secret variables are JSON dictionaries; the function uses the `default` key from each. `SUPABASE_SECRET_KEYS` bypasses RLS and must never be copied into Vite/browser environment variables.
+
+### Deploy the email function
+
+With the Supabase CLI linked to the production project:
+
+```powershell
+supabase functions deploy send-event-email --no-verify-jwt
+```
+
+The function performs its own authenticated-user check before it sends any email. It then validates event access and determines recipients on the server.
+
+### Apply migration 008
+
+Run:
+
+`supabase/migrations/202608280008_email_notifications.sql`
+
+This creates `email_delivery_log`. Venue staff and platform admins can read delivery history for their venues; browser clients cannot write delivery records.
+
+### Expected behavior
+
+- Venue owner/staff opens Access Details and sends an invitation to the primary or partner email.
+- Invitations can only be sent to contacts already assigned to that event.
+- Revoked contacts cannot be invited until access is restored.
+- A real venue message sends client email notification only after the message is saved.
+- A real client message sends venue/staff email notification only after the message is saved.
+- Message notifications are idempotent by event + app message ID + recipient.
+- Email failure never rolls back an already-saved planning message.

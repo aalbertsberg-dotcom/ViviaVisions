@@ -1,4 +1,4 @@
-# ViviaVisions v1.13.0
+# ViviaVisions v1.14.0
 
 **Every detail. Every option. Every vision.**
 
@@ -24,6 +24,9 @@ ViviaVisions is a multi-tenant venue planning platform built with React, TypeScr
 - full live-venue inventory CRUD with public inventory photos and CSV import
 - ViviaVisions Admin inventory view separated by venue
 - venue profile, package and planning-space content management
+- Resend-powered client invitation emails through a Supabase Edge Function
+- automatic transactional email notifications after real messages are saved
+- server-side delivery logging and duplicate-message protection
 
 ## Local development
 

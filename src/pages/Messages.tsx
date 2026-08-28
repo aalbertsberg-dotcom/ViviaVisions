@@ -143,7 +143,7 @@ export default function Messages({
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+    if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
       sendMessage()
     }
@@ -308,7 +308,7 @@ export default function Messages({
         {attachmentError && <div className="composer-error">{attachmentError}</div>}
         <textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={handleKeyDown} placeholder={`Message ${otherName}…`} />
         <div className="composer-footer">
-          <span>Ctrl + Enter to send</span>
+          <span>Enter to send · Shift + Enter for a new line</span>
           <button className="button button--primary" onClick={sendMessage} disabled={!draft.trim() && !attachments.length && !context}>Send message</button>
         </div>
       </div>
