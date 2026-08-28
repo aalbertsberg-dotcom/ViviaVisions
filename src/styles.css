@@ -3470,3 +3470,49 @@ body { font-size:15px; line-height:1.5; }
 .clean-account-menu__items .clean-account-menu__signout {
   color: #9b5146;
 }
+
+/* v1.10 real client authentication */
+.client-auth-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 18px 0 14px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #f8f4ef;
+}
+
+.client-auth-switch button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.client-auth-switch button.active {
+  background: #fff;
+  color: var(--brown);
+  box-shadow: 0 5px 16px rgba(25,39,61,.08);
+}
+
+.client-auth-status {
+  margin: 10px 0;
+  padding: 11px 13px;
+  border: 1px solid #cddfcf;
+  border-radius: 10px;
+  background: #f4faf4;
+  color: #3d6747;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.wedding-detail-fields input:disabled,
+.wedding-detail-fields select:disabled {
+  cursor: not-allowed;
+  opacity: .72;
+  background: #f5f2ee;
+}

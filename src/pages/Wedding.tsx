@@ -15,9 +15,10 @@ type WeddingProps = {
   onSetQuantity: (itemId: string, quantity: number) => void
   onNavigate: (page: PageKey) => void
   ownerMode: boolean
+  clientAuthenticated: boolean
 }
 
-export default function Wedding({ venueId, profile, selections, unreadMessages, paymentStepsCompleted, onProfileChange, onNavigate, ownerMode }: WeddingProps) {
+export default function Wedding({ venueId, profile, selections, unreadMessages, paymentStepsCompleted, onProfileChange, onNavigate, ownerMode, clientAuthenticated }: WeddingProps) {
   const config=venueConfigById(venueId); const venue=config.profile; const pkg=packageById(profile.packageId,venueId)
   const eventLabel=venue.eventLabel ?? 'event'; const clientLabel=venue.clientLabel ?? 'client'; const isWedding=eventLabel==='wedding'; const isChandelier=venue.id==='venue-chandelier-oaks'
   const selectedPieces=selections.reduce((sum,item)=>sum+item.quantity,0)
@@ -45,13 +46,13 @@ export default function Wedding({ venueId, profile, selections, unreadMessages, 
     </section>
 
     <div className="wedding-content-grid">
-      <section className="panel wedding-details-panel"><div className="panel__heading"><div><p className="eyebrow">{eventLabel.toUpperCase()} DETAILS</p><h2>Plan the {isWedding?'day':'event'}</h2><p>{isChandelier && ownerMode ? 'Owner changes save automatically to the venue database.' : isChandelier ? 'Changes remain in this browser until client authentication is connected.' : 'Changes save automatically in this browser preview.'}</p></div></div><div className="form-grid two-col wedding-detail-fields">
-        <label><span>{isWedding?'Couple':'Event / client name'}</span><input value={profile.couple} onChange={(e)=>patch('couple',e.target.value)} /></label>
-        <label><span>{eventLabel[0].toUpperCase()+eventLabel.slice(1)} date</span><input type="date" value={profile.date} onChange={(e)=>patch('date',e.target.value)} /></label>
+      <section className="panel wedding-details-panel"><div className="panel__heading"><div><p className="eyebrow">{eventLabel.toUpperCase()} DETAILS</p><h2>Plan the {isWedding?'day':'event'}</h2><p>{isChandelier && ownerMode ? 'Owner changes save automatically to the venue database.' : isChandelier && clientAuthenticated ? 'Client-managed planning details save securely to this private workspace.' : isChandelier ? 'Demo changes remain in this browser.' : 'Changes save automatically in this browser preview.'}</p></div></div><div className="form-grid two-col wedding-detail-fields">
+        <label><span>{isWedding?'Couple':'Event / client name'} (venue controlled)</span><input value={profile.couple} onChange={(e)=>ownerMode&&patch('couple',e.target.value)} disabled={!ownerMode} /></label>
+        <label><span>{eventLabel[0].toUpperCase()+eventLabel.slice(1)} date (venue controlled)</span><input type="date" value={profile.date} onChange={(e)=>ownerMode&&patch('date',e.target.value)} disabled={!ownerMode} /></label>
         <label><span>Guest count</span><input type="number" min="1" max="500" value={profile.guests} onChange={(e)=>patch('guests',Number(e.target.value)||1)} /></label>
         <label><span>Package {ownerMode?'':'(venue controlled)'}</span><select value={profile.packageId} onChange={(e)=>ownerMode&&patch('packageId',e.target.value)} disabled={!ownerMode}>{config.packages.map((item)=><option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-        <label><span>Primary contact email</span><input type="email" value={profile.primaryEmail} onChange={(e)=>patch('primaryEmail',e.target.value)} /></label>
-        <label><span>{isWedding?'Partner email':'Secondary contact email'}</span><input type="email" value={profile.partnerEmail} onChange={(e)=>patch('partnerEmail',e.target.value)} /></label>
+        <label><span>Primary contact email (venue controlled)</span><input type="email" value={profile.primaryEmail} onChange={(e)=>ownerMode&&patch('primaryEmail',e.target.value)} disabled={!ownerMode} /></label>
+        <label><span>{isWedding?'Partner email':'Secondary contact email'} (venue controlled)</span><input type="email" value={profile.partnerEmail} onChange={(e)=>ownerMode&&patch('partnerEmail',e.target.value)} disabled={!ownerMode} /></label>
         {isWedding ? <><label><span>Ceremony area</span><select value={profile.ceremonyArea} onChange={(e)=>patch('ceremonyArea',e.target.value)}><option value="">Choose an area</option>{ceremonyAreas.map((area)=><option key={area.id} value={area.id}>{area.name}</option>)}</select></label><label><span>Reception / gathering area</span><select value={profile.receptionArea} onChange={(e)=>patch('receptionArea',e.target.value)}><option value="">Choose an area</option>{receptionAreas.map((area)=><option key={area.id} value={area.id}>{area.name}</option>)}</select></label></> : <><label><span>Arrival / pre-function space</span><select value={profile.ceremonyArea} onChange={(e)=>patch('ceremonyArea',e.target.value)}><option value="">Choose a space</option>{allPlannerAreas.map((area)=><option key={area.id} value={area.id}>{area.name}</option>)}</select></label><label><span>Primary event space</span><select value={profile.receptionArea} onChange={(e)=>patch('receptionArea',e.target.value)}><option value="">Choose a space</option>{allPlannerAreas.map((area)=><option key={area.id} value={area.id}>{area.name}</option>)}</select></label></>}
       </div><label className="notes-field"><span>Notes for {venue.shortName}</span><textarea value={profile.notes} onChange={(e)=>patch('notes',e.target.value)} placeholder="Placement requests, questions, must-haves, vendor notes…" /></label></section>
 

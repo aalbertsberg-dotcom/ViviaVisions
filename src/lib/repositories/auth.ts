@@ -12,6 +12,13 @@ export async function signInWithPassword(email: string, password: string) {
   return data
 }
 
+export async function signUpWithPassword(email: string, password: string) {
+  const client = requireSupabase()
+  const { data, error } = await client.auth.signUp({ email, password })
+  if (error) throw error
+  return data
+}
+
 export async function signOut() {
   const client = requireSupabase()
   const { error } = await client.auth.signOut()
@@ -25,6 +32,16 @@ export async function sendPasswordReset(email: string, redirectTo?: string) {
   return data
 }
 
+export async function claimClientEventAccess(venueSlug: string, accessSlug: string) {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('claim_client_event_access', {
+    target_venue_slug: venueSlug,
+    target_access_slug: accessSlug,
+  })
+  if (error) throw error
+  if (!data) throw new Error('The client event could not be opened.')
+  return String(data)
+}
 
 export async function getVenueStaffAccessBySlug(slug: string, userId: string) {
   const client = requireSupabase()

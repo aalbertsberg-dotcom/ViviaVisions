@@ -56,19 +56,6 @@ function workspaceStatus(value: unknown): WeddingStatus {
   }
 }
 
-function databaseStatus(value: WeddingStatus) {
-  switch (value) {
-    case 'Designing':
-      return 'designing'
-    case 'Ready':
-      return 'ready'
-    case 'Cancelled':
-      return 'cancelled'
-    case 'Not started':
-    default:
-      return 'not_started'
-  }
-}
 
 const plannerTypes = new Set<PlannerObjectType>([
   'round-table',
@@ -410,7 +397,7 @@ export async function createVenueEventWorkspace(
   let suffix = 2
   while (usedSlugs.has(accessSlug)) accessSlug = `${baseSlug}-${suffix++}`
 
-  const accessCode = String(Math.floor(100000 + Math.random() * 900000))
+  const accessCode = ''
 
   const clientId = crypto.randomUUID()
   const eventId = crypto.randomUUID()
@@ -447,7 +434,7 @@ export async function createVenueEventWorkspace(
       reservation_paid: true,
       payment_steps_completed: 1,
       metadata: {
-        preview_access_code: accessCode,
+        auth_mode: 'supabase',
       },
     })
 
@@ -523,6 +510,34 @@ export async function saveEventProfile(eventId: string, profile: WeddingProfile)
   }
 }
 
+export async function saveClientEventPlanningProfile(eventId: string, profile: WeddingProfile) {
+  const client = requireSupabase()
+  const event = await eventVenue(eventId)
+
+  const [ceremonySpaceId, receptionSpaceId] = await Promise.all([
+    spaceUuid(event.venue_id, profile.ceremonyArea),
+    spaceUuid(event.venue_id, profile.receptionArea),
+  ])
+
+  const { error } = await client.rpc('update_client_event_planning', {
+    target_event_id: eventId,
+    target_guest_count: Math.max(1, profile.guests || 1),
+    target_ceremony_space_id: ceremonySpaceId,
+    target_reception_space_id: receptionSpaceId,
+    target_notes: profile.notes,
+  })
+
+  if (error) throw error
+}
+
+async function markEventDesigning(eventId: string) {
+  const client = requireSupabase()
+  const { error } = await client.rpc('mark_event_designing', {
+    target_event_id: eventId,
+  })
+  if (error) throw error
+}
+
 export async function setEventSelection(eventId: string, inventoryExternalKey: string, quantity: number) {
   const client = requireSupabase()
   const event = await eventVenue(eventId)
@@ -560,12 +575,8 @@ export async function setEventSelection(eventId: string, inventoryExternalKey: s
 
   if (error) throw error
 
-  const { error: statusError } = await client
-    .from('events')
-    .update({ status: databaseStatus('Designing') })
-    .eq('id', eventId)
+  await markEventDesigning(eventId)
 
-  if (statusError) throw statusError
 }
 
 export async function saveEventLayoutItems(eventId: string, placedItems: PlacedItem[]) {
@@ -669,12 +680,8 @@ export async function saveEventLayoutItems(eventId: string, placedItems: PlacedI
     if (itemsError) throw itemsError
   }
 
-  const { error: statusError } = await client
-    .from('events')
-    .update({ status: databaseStatus('Designing') })
-    .eq('id', eventId)
+  await markEventDesigning(eventId)
 
-  if (statusError) throw statusError
 }
 
 export async function saveEventMessages(eventId: string, messages: WeddingMessage[]) {
@@ -715,6 +722,49 @@ export async function saveEventMessages(eventId: string, messages: WeddingMessag
 }
 
 
+
+
+export async function appendClientEventMessages(eventId: string, messages: WeddingMessage[]) {
+  if (!messages.length) return
+  const client = requireSupabase()
+  const { data: userData, error: userError } = await client.auth.getUser()
+  if (userError) throw userError
+  if (!userData.user) throw new Error('Sign in before sending a message.')
+
+  const rows = messages
+    .filter((message) => message.senderRole !== 'venue')
+    .map((message) => ({
+      event_id: eventId,
+      sender_user_id: userData.user.id,
+      sender_role: 'client',
+      sender_name: message.senderName,
+      body: message.body,
+      context_kind: message.context?.kind ?? null,
+      context_id: null,
+      context_label: message.context?.label ?? null,
+      created_at: message.timestamp,
+      metadata: {
+        app_id: message.id,
+        attachments: message.attachments,
+        context: message.context ?? null,
+        read_by_bride: true,
+        read_by_venue: false,
+      },
+    }))
+
+  if (!rows.length) return
+
+  const { error } = await client.from('messages').insert(rows)
+  if (error) throw error
+}
+
+export async function markClientEventMessagesRead(eventId: string) {
+  const client = requireSupabase()
+  const { error } = await client.rpc('mark_client_messages_read', {
+    target_event_id: eventId,
+  })
+  if (error) throw error
+}
 
 
 async function eventLifecycleRow(eventId: string) {
