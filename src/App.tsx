@@ -156,6 +156,14 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
+  /* v1.9.1 mobile scroll reset */
+  useEffect(() => {
+    const resetScroll = () => window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    resetScroll()
+    const frame = window.requestAnimationFrame(resetScroll)
+    return () => window.cancelAnimationFrame(frame)
+  }, [page, ownerAuthenticatedVenueId, coupleAuthenticatedWeddingId, platformAuthenticated])
+
   useEffect(() => {
     if (!requestedCoupleSlug) return
     const wedding = weddings.find((item) => item.venueId === activeVenueId && item.accessSlug === requestedCoupleSlug)
@@ -573,6 +581,14 @@ export default function App() {
     }
   }
 
+  const scrollToTopAfterAuth = () => {
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    })
+  }
+
   const authenticateOwner = async (emailOrCode: string, password?: string): Promise<{ ok: boolean; error?: string }> => {
     const usesRealAuth = activeVenue.profile.slug === 'chandelier-oaks'
 
@@ -580,6 +596,7 @@ export default function App() {
       if (emailOrCode.trim() !== activeVenue.ownerAccessCode) return { ok: false, error: 'Incorrect preview password.' }
       setOwnerAuthenticatedVenueId(activeVenueId)
       setCoupleAuthenticatedWeddingId(null)
+      scrollToTopAfterAuth()
       return { ok: true }
     }
 
@@ -671,6 +688,7 @@ export default function App() {
       setPlatformAuthenticated(true)
       setOwnerAuthenticatedVenueId(null)
       setCoupleAuthenticatedWeddingId(null)
+      scrollToTopAfterAuth()
       return { ok: true }
     } catch (error) {
       setPlatformAuthenticated(false)

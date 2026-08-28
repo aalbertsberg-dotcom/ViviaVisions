@@ -115,6 +115,7 @@ export default function AiPreview({ venueId, weddingId, weddingName, preferredAr
 
   return (
     <main className="page-main shell ai-preview-page">
+      <div className="ai-coming-soon-banner">AI VISUAL PREVIEW · COMING SOON</div>
       <section className="page-intro page-intro--split ai-preview-intro"><div><p className="eyebrow">{venue.shortName.toUpperCase()} · STEP 3 · VISUAL PREVIEW</p><h1>Preview the layout you already designed.</h1><p>The 2D plan stays in control of placement. This step adds a venue reference photo, resource choices and visual style to help you picture the finished setup for {weddingName}.</p></div><div className="ai-preview-intro__actions"><button className="button button--primary" onClick={() => onNavigate('planner')}>Back to 2D Designer</button><button className="button button--ghost" onClick={() => onNavigate('media')}>Reference Photos</button></div></section>
 
       <section className="panel ai-layout-source">

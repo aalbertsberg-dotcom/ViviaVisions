@@ -3279,3 +3279,112 @@ body { font-size:15px; line-height:1.5; }
     grid-template-columns:1fr;
   }
 }
+
+/* v1.9.1 mobile header + AI coming soon */
+
+/* Platform/owner sign-out already exists in the hamburger drawer.
+   Do not squeeze a second Sign out button into the mobile header. */
+@media (max-width: 900px) {
+  .app-header--platform .app-header__actions > .button--ghost {
+    display: none !important;
+  }
+
+  .app-header--platform .platform-brand {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .app-header--platform .platform-brand > span {
+    min-width: 0;
+  }
+
+  .app-header--platform .platform-brand strong,
+  .app-header--platform .platform-brand small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-header--platform .compact-menu-button {
+    flex: 0 0 auto;
+  }
+}
+
+/* The production AI renderer is not live yet. Keep the useful layout-source
+   information visible, but do not present prototype generation controls as live. */
+.ai-preview-intro {
+  flex-wrap: wrap;
+}
+
+.ai-preview-intro::before {
+  content: 'AI VISUAL PREVIEW · COMING SOON';
+  order: -1;
+  flex: 0 0 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-bottom: 6px;
+  padding: 10px 18px;
+  border: 1px solid #dfcba9;
+  border-radius: 999px;
+  background: #fff8ed;
+  color: #8b6438;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-align: center;
+}
+
+.ai-preview-page .ai-production-note,
+.ai-preview-page .ai-preview-layout {
+  display: none !important;
+}
+
+.ai-preview-page .ai-layout-source {
+  margin-bottom: 0;
+}
+
+@media (max-width: 700px) {
+  .ai-preview-intro::before {
+    border-radius: 18px;
+    line-height: 1.35;
+  }
+}
+
+/* v1.9.2 centered AI coming soon banner */
+.ai-preview-intro::before {
+  content: none !important;
+  display: none !important;
+}
+
+.ai-coming-soon-banner {
+  width: 100%;
+  max-width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 32px;
+  padding: 10px 18px;
+  border: 1px solid #dfcba9;
+  border-radius: 999px;
+  background: #fff8ed;
+  color: #8b6438;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  line-height: 1.35;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .ai-coming-soon-banner {
+    margin-bottom: 30px;
+    padding-inline: 14px;
+    border-radius: 18px;
+    font-size: 11px;
+    letter-spacing: .12em;
+  }
+}
