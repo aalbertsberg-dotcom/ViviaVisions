@@ -7,6 +7,12 @@ export type VendorPartner = {
   href: string
   cta: string
   placeholder?: boolean
+  logoUrl?: string
+  serviceArea?: string
+  websiteUrl?: string
+  venueSlugs?: string[]
+  planTier?: string
+  featured?: boolean
 }
 
 const mail = (name: string) =>
@@ -21,6 +27,9 @@ export const chandelierPartners: VendorPartner[] = [
     badge: 'FOUNDING PARTNER',
     href: mail('Southern Lux Rentals'),
     cta: 'Request information',
+    venueSlugs: ['chandelier-oaks'],
+    planTier: 'Founding',
+    featured: true,
   },
   {
     key: 'party-girls',
@@ -30,6 +39,9 @@ export const chandelierPartners: VendorPartner[] = [
     badge: 'FOUNDING PARTNER',
     href: mail('Party Girls'),
     cta: 'Request information',
+    venueSlugs: ['chandelier-oaks'],
+    planTier: 'Founding',
+    featured: true,
   },
   {
     key: 'photo-booth-partner',
@@ -40,6 +52,8 @@ export const chandelierPartners: VendorPartner[] = [
     href: mail('Photo Booth Partner'),
     cta: 'Ask about this category',
     placeholder: true,
+    venueSlugs: ['chandelier-oaks'],
+    planTier: 'Opening',
   },
   {
     key: 'floral-partner',
@@ -50,5 +64,7 @@ export const chandelierPartners: VendorPartner[] = [
     href: mail('Floral Partner'),
     cta: 'Ask about this category',
     placeholder: true,
+    venueSlugs: ['chandelier-oaks'],
+    planTier: 'Opening',
   },
 ]

@@ -1,4 +1,4 @@
-# ViviaVisions v1.17.2
+# ViviaVisions v1.18.0
 
 **Every detail. Every option. Every vision.**
 
@@ -97,3 +97,10 @@ Adds ViviaVisions Partner placeholders plus first-party analytics for page views
 - Prevents Playwright Quality/Production Smoke tests from recording page views, partner impressions or partner clicks.
 - Adds migration 011 to reset the analytics-only table once because earlier automated smoke tests polluted the initial counts.
 - Apply migration 011 only AFTER v1.17.2 is deployed and Production Smoke is green.
+## v1.18.0 — Partner Management
+- Adds a protected VV Admin Partner Management page at `#/platform-partners`.
+- Reorganizes platform navigation: Admin, Venue Accounts, Partners and Inventory are primary; Requests and Production Check live in the existing Menu drawer.
+- Partners are stored in Supabase and can be added, edited, archived/restored and assigned to one or more venue pages.
+- Admin fields include category, badge, plan, monthly price, website, contact email, service area, logo URL, CTA, placement dates, venue placement, featured status, placeholder status, sort order and internal notes.
+- Public venue partner cards load managed records from Supabase with the v1.17 built-in cards retained as a safe fallback.
+- Migration 012 seeds the four current Chandelier Oaks partner cards into the managed table.

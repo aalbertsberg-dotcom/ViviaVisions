@@ -4,7 +4,7 @@ import Logo from './Logo'
 import type { VenueProfile, WeddingWorkspace } from '../types'
 import { PLATFORM_NAME, PLATFORM_NAME_UPPER, PLATFORM_SHORT_NAME, POWERED_BY_PLATFORM } from '../config/platform'
 
-export type PageKey = 'home' | 'venues' | 'for-venues' | 'signin' | 'venue' | 'catalog' | 'wedding' | 'planner' | 'media' | 'ai-preview' | 'messages' | 'calendar' | 'summary' | 'admin' | 'manage-events' | 'inventory-admin' | 'venue-content' | 'platform' | 'platform-inventory' | 'production-check' | 'access-check' | 'terms' | 'privacy' | 'customer-agreement'
+export type PageKey = 'home' | 'venues' | 'for-venues' | 'signin' | 'venue' | 'catalog' | 'wedding' | 'planner' | 'media' | 'ai-preview' | 'messages' | 'calendar' | 'summary' | 'admin' | 'manage-events' | 'inventory-admin' | 'venue-content' | 'platform' | 'platform-partners' | 'platform-inventory' | 'production-check' | 'access-check' | 'terms' | 'privacy' | 'customer-agreement'
 
 type HeaderProps = {
   page: PageKey
@@ -104,15 +104,18 @@ export default function Header({
   ]
   const platformNav: NavItem[] = [
     { key: 'platform', label: 'Admin' },
-    { key: 'platform-inventory', label: 'Inventory' },
-    { key: 'production-check', label: 'Production Check' },
     { key: 'venues', label: 'Venue Accounts' },
-    { key: 'for-venues', label: 'Requests' },
+    { key: 'platform-partners', label: 'Partners' },
+    { key: 'platform-inventory', label: 'Inventory' },
+  ]
+  const platformMore: NavItem[] = [
+    { key: 'for-venues', label: 'Requests', description: 'New venue and platform inquiries' },
+    { key: 'production-check', label: 'Production Check', description: 'Security, database and deployment checks' },
   ]
 
   const hrefFor = (next: PageKey) => {
     if (next === 'home') return '#/'
-    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-inventory' || next === 'production-check' || next === 'access-check') return `#/${next}`
+    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-partners' || next === 'platform-inventory' || next === 'production-check' || next === 'access-check') return `#/${next}`
     if (next === 'venue') return `#/venue/${activeVenue.slug}`
     if (next === 'admin') return `#/venue/${activeVenue.slug}/owner`
     return `#/venue/${activeVenue.slug}/${next}`
@@ -120,7 +123,7 @@ export default function Header({
 
   const go = (next: PageKey) => { setMenuOpen(false); setProfileOpen(false); onNavigate(next) }
   const desktopItems = mode === 'owner' ? ownerNav : mode === 'couple' ? coupleNav : mode === 'platform' ? platformNav : publicNav
-  const drawerItems = mode === 'owner' ? [...ownerNav, ...ownerMore] : mode === 'couple' ? [...coupleNav, ...coupleMore] : mode === 'platform' ? platformNav : publicNav
+  const drawerItems = mode === 'owner' ? [...ownerNav, ...ownerMore] : mode === 'couple' ? [...coupleNav, ...coupleMore] : mode === 'platform' ? [...platformNav, ...platformMore] : publicNav
 
   return (
     <>

@@ -100,3 +100,8 @@ test('platform analytics separates site traffic from partner analytics', async (
   await page.goto('/#/platform')
   await expect(page.getByText('ViviaVisions site analytics')).toHaveCount(0)
 })
+test('platform partner manager is protected', async ({ page }) => {
+  await page.goto('/#/platform-partners')
+  await expect(page.getByRole('heading', { name: /Administrator sign in/i })).toBeVisible()
+  await expect(page.getByText('Partner Management')).toHaveCount(0)
+})

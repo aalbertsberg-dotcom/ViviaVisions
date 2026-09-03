@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react'
 import { chandelierPartners } from '../config/vendorPartners'
 import { loadAnalytics } from '../lib/repositories/analytics'
+import { listManagedPartners } from '../lib/repositories/partners'
 
 export default function PlatformAnalytics() {
   const [days, setDays] = useState(30)
   const [data, setData] = useState<any>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [managedNames, setManagedNames] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    void listManagedPartners()
+      .then((partners) => setManagedNames(Object.fromEntries(partners.map((partner) => [partner.partnerKey, partner.name]))))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -20,7 +28,7 @@ export default function PlatformAnalytics() {
   }, [days])
 
   const vendorName = (key: string) =>
-    chandelierPartners.find((partner) => partner.key === key)?.name ?? key
+    managedNames[key] ?? chandelierPartners.find((partner) => partner.key === key)?.name ?? key
 
   const pagesPerVisit = data?.overview.visits
     ? data.overview.pageViews / data.overview.visits

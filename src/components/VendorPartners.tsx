@@ -1,17 +1,44 @@
 import { useEffect, useState } from 'react'
 import { chandelierPartners, type VendorPartner } from '../config/vendorPartners'
+import { listPublicPartners } from '../lib/repositories/partners'
 import { trackVendorClick, trackVendorImpression } from '../lib/repositories/analytics'
 
 type Props = { venueSlug: string; venueName: string }
 
+function fallbackPartners(venueSlug: string) {
+  return venueSlug === 'chandelier-oaks' ? chandelierPartners : []
+}
+
+function initials(name: string) {
+  return name.split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toUpperCase()
+}
+
 export default function VendorPartners({ venueSlug, venueName }: Props) {
+  const [partners, setPartners] = useState<VendorPartner[]>(() => fallbackPartners(venueSlug))
   const [selected, setSelected] = useState<VendorPartner | null>(null)
 
-  if (venueSlug !== 'chandelier-oaks') return null
+  useEffect(() => {
+    let cancelled = false
+    setPartners(fallbackPartners(venueSlug))
+
+    void listPublicPartners(venueSlug)
+      .then((managed) => {
+        if (!cancelled && managed.length) setPartners(managed)
+      })
+      .catch(() => {
+        // Keep the built-in fallback until partner management is configured.
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [venueSlug])
 
   useEffect(() => {
-    chandelierPartners.forEach((partner) => void trackVendorImpression(partner.key, venueSlug))
-  }, [venueSlug])
+    partners.forEach((partner) => void trackVendorImpression(partner.key, venueSlug))
+  }, [venueSlug, partners])
+
+  if (!partners.length) return null
 
   const openPartner = (partner: VendorPartner) => {
     setSelected(partner)
@@ -30,9 +57,9 @@ export default function VendorPartners({ venueSlug, venueName }: Props) {
       </div>
 
       <div className="vendor-partner-grid">
-        {chandelierPartners.map((partner) => (
+        {partners.map((partner) => (
           <article
-            className={`vendor-partner-card${partner.placeholder ? ' vendor-partner-card--placeholder' : ''}`}
+            className={`vendor-partner-card${partner.placeholder ? ' vendor-partner-card--placeholder' : ''}${partner.featured ? ' vendor-partner-card--featured' : ''}`}
             key={partner.key}
             role="button"
             tabIndex={0}
@@ -46,9 +73,12 @@ export default function VendorPartners({ venueSlug, venueName }: Props) {
             }}
           >
             <div className="vendor-partner-card__top"><span>{partner.category}</span><b>{partner.badge}</b></div>
-            <div className="vendor-partner-card__mark">{partner.name.split(/\s+/).slice(0,2).map((word) => word[0]).join('').toUpperCase()}</div>
+            <div className={`vendor-partner-card__mark${partner.logoUrl ? ' vendor-partner-card__mark--image' : ''}`}>
+              {partner.logoUrl ? <img src={partner.logoUrl} alt="" /> : initials(partner.name)}
+            </div>
             <h3>{partner.name}</h3>
             <p>{partner.description}</p>
+            {partner.serviceArea && <small className="vendor-partner-card__service-area">{partner.serviceArea}</small>}
             <span className="vendor-partner-card__details">View partner details →</span>
           </article>
         ))}
@@ -64,28 +94,26 @@ export default function VendorPartners({ venueSlug, venueName }: Props) {
             onMouseDown={(event) => event.stopPropagation()}
           >
             <button className="vendor-partner-modal__close" type="button" onClick={() => setSelected(null)} aria-label="Close partner details">×</button>
-            <div className="vendor-partner-modal__mark">{selected.name.split(/\s+/).slice(0,2).map((word) => word[0]).join('').toUpperCase()}</div>
+            <div className={`vendor-partner-modal__mark${selected.logoUrl ? ' vendor-partner-modal__mark--image' : ''}`}>
+              {selected.logoUrl ? <img src={selected.logoUrl} alt="" /> : initials(selected.name)}
+            </div>
             <div className="vendor-partner-modal__labels"><span>{selected.category}</span><b>{selected.badge}</b></div>
             <h2 id="vendor-partner-modal-title">{selected.name}</h2>
             <p>{selected.description}</p>
 
             <div className="vendor-partner-modal__info">
-              <div><span>Listing status</span><strong>{selected.placeholder ? 'Category available' : 'Founding ViviaVisions partner'}</strong></div>
-              <div><span>Available at</span><strong>Chandelier Oaks</strong></div>
+              <div><span>Listing status</span><strong>{selected.placeholder ? 'Category available' : selected.planTier || 'ViviaVisions partner'}</strong></div>
+              <div><span>Service area</span><strong>{selected.serviceArea || venueName}</strong></div>
             </div>
 
-            {selected.placeholder ? (
+            {selected.placeholder && (
               <div className="vendor-partner-modal__notice">
-                This is a placeholder partner category. A real vendor profile can later include a logo, photo gallery, website, packages, service area and direct quote link.
-              </div>
-            ) : (
-              <div className="vendor-partner-modal__notice">
-                This founding partner profile is ready for a logo, photos, website, service area, packages and direct booking information as those details become available.
+                This is an open partner category. A real vendor profile can include a logo, website, services, service area and direct booking information.
               </div>
             )}
 
             <div className="vendor-partner-modal__actions">
-              <a className="button button--primary" href={selected.href}>{selected.cta}</a>
+              <a className="button button--primary" href={selected.href} target={selected.websiteUrl ? '_blank' : undefined} rel={selected.websiteUrl ? 'noopener noreferrer' : undefined}>{selected.cta}</a>
               <button className="button button--ghost" type="button" onClick={() => setSelected(null)}>Back to partners</button>
             </div>
           </section>

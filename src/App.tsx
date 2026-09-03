@@ -18,6 +18,7 @@ import Admin from './pages/Admin'
 import ManageEvents from './pages/ManageEvents'
 import PlatformAdmin from './pages/PlatformAdmin'
 import InventoryManager from './pages/InventoryManager'
+import PlatformPartners from './pages/PlatformPartners'
 import VenueContentManager from './pages/VenueContentManager'
 import ProductionCheck from './pages/ProductionCheck'
 import AccessCheck from './pages/AccessCheck'
@@ -100,7 +101,7 @@ function parseRoute(): RouteState {
     if (parts[2] && scopedPages.includes(parts[2] as PageKey)) return { page: parts[2] as PageKey, coupleSlug: null, venueSlug }
     return { page: 'venue', coupleSlug: null, venueSlug }
   }
-  const allowed: PageKey[] = ['home','venues','for-venues','signin','platform','platform-inventory','production-check','access-check','terms','privacy','customer-agreement']
+  const allowed: PageKey[] = ['home','venues','for-venues','signin','platform','platform-partners','platform-inventory','production-check','access-check','terms','privacy','customer-agreement']
   return { page: allowed.includes(parts[0] as PageKey) ? parts[0] as PageKey : 'home', coupleSlug: null, venueSlug: null }
 }
 
@@ -396,7 +397,7 @@ export default function App() {
 
   const routeFor = (next: PageKey) => {
     if (next === 'home') return '#/'
-    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-inventory' || next === 'production-check' || next === 'access-check' || next === 'terms' || next === 'privacy' || next === 'customer-agreement') return `#/${next}`
+    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-partners' || next === 'platform-inventory' || next === 'production-check' || next === 'access-check' || next === 'terms' || next === 'privacy' || next === 'customer-agreement') return `#/${next}`
     if (next === 'venue') return `#/venue/${activeVenue.profile.slug}`
     if (next === 'admin') return `#/venue/${activeVenue.profile.slug}/owner`
     return `#/venue/${activeVenue.profile.slug}/${next}`
@@ -1122,6 +1123,10 @@ export default function App() {
       {!showCoupleGate && !showOwnerGate && page === 'venue-content' && venueAdminAuthenticated && <VenueContentManager venueId={activeVenueId} onBack={() => navigate('admin')} />}
       {page === 'admin' && <Admin venueId={activeVenueId} weddings={venueWeddings} activeWeddingId={activeWedding?.id ?? ''} onSelectWedding={selectActiveWedding} onOpenWedding={openWedding} onAddWedding={addWedding} authenticated={venueAdminAuthenticated} authLoading={ownerAuthLoading} onAuthenticate={authenticateOwner} onExitPreview={() => navigate('venue')} onLogout={logoutOwner} onNavigate={navigate} platformAdminAccess={platformAuthenticated} />}
       {page === 'platform' && <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={dedupedWeddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} onManageVenue={openVenueAsPlatformAdmin} />}
+      {page === 'platform-partners' && (platformAuthenticated
+        ? <PlatformPartners venues={venueConfigs} onBack={() => navigate('platform')} />
+        : <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={dedupedWeddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} onManageVenue={openVenueAsPlatformAdmin} />
+      )}
       {page === 'platform-inventory' && (platformAuthenticated
         ? <InventoryManager venues={venueConfigs} initialVenueId={activeVenueId} platformMode onBack={() => navigate('platform')} />
         : <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={dedupedWeddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} onManageVenue={openVenueAsPlatformAdmin} />
