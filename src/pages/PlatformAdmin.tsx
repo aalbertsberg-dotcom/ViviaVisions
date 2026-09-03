@@ -7,6 +7,7 @@ import { backendStatus } from '../lib/backend'
 import { buildPublicAppUrl } from '../config/runtime'
 import { sendPasswordReset, signOut as signOutSupabase, updatePassword } from '../lib/repositories/auth'
 import { supabase } from '../lib/supabase'
+import PlatformAnalytics from '../components/PlatformAnalytics'
 
 type PlatformAdminProps = {
   authenticated: boolean
@@ -333,6 +334,8 @@ export default function PlatformAdmin({
           <small>{trashedEvents.length} events in trash</small>
         </article>
       </section>
+
+      <PlatformAnalytics />
 
       <section className="panel vv-admin-section vv-admin-venues">
         <div className="vv-admin-section__heading">

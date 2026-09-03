@@ -1,4 +1,4 @@
-# ViviaVisions v1.16.1
+# ViviaVisions v1.17.0
 
 **Every detail. Every option. Every vision.**
 
@@ -84,3 +84,5 @@ git push
 - After repeated failed owner/staff sign-ins, the page explicitly points users to password reset.
 - The public Customer Agreement now contains only the legal terms; internal signature/order-form template instructions are no longer public.
 - Paid onboarding is described as a separate Order Form / Customer Agreement sent privately for review and signature.
+## v1.17.0
+Adds ViviaVisions Partner placeholders plus first-party analytics for page views, anonymous visits, partner impressions, partner clicks and CTR. VV Admin receives a 7/30/90-day analytics panel. Apply migration `202609030010_partner_analytics.sql`. Analytics starts collecting after deployment and is not retroactive.

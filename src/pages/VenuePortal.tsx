@@ -4,6 +4,7 @@ import { venueConfigById } from '../data'
 import type { WeddingWorkspace } from '../types'
 import { PLATFORM_NAME, PLATFORM_NAME_UPPER } from '../config/platform'
 import { isDemoClientWorkspace } from '../config/demo'
+import VendorPartners from '../components/VendorPartners'
 
 type VenuePortalProps = {
   venueId: string
@@ -102,6 +103,8 @@ export default function VenuePortal({ venueId, weddings, onNavigate, onOpenCoupl
           ))}
         </div>
       </section>
+
+      <VendorPartners venueSlug={venue.slug} venueName={venue.shortName} />
 
       {isChandelier ? (
         <section id="chandelier-demo-showcase" data-testid="demo-showcase" className="section shell venue-couple-preview-section venue-demo-showcase">

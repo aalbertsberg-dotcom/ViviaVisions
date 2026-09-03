@@ -32,6 +32,7 @@ import { claimClientEventAccess, claimMyClientEvents, getVenueStaffAccessBySlug,
 import { appendClientEventMessages, cancelVenueEvent, createVenueEventWorkspace, listVenueEventWorkspaces, markClientEventMessagesRead, permanentDeleteVenueEvent, reopenVenueEvent, resetEventPlanning, restoreVenueEvent, saveClientEventPlanningProfile, saveEventLayoutItems, saveEventMessages, saveEventProfile, setEventSelection, softDeleteVenueEvent } from './lib/repositories/events'
 import { loadVenueConfigFromSupabase } from './lib/repositories/venueConfig'
 import { sendNewMessageNotification } from './lib/repositories/notifications'
+import { trackPageView } from './lib/repositories/analytics'
 import CoupleAccess from './pages/CoupleAccess'
 import { applyVenueConfigOverride, chandelierOaks, foundryRivergate, itemAllowedForTier, juniperStone, packageById, venueConfigById, venueConfigBySlug, venueConfigs } from './data'
 import type { MessageContext, MessageRole, PlacedItem, VenueLead, WeddingMessage, WeddingProfile, WeddingStatus, WeddingWorkspace } from './types'
@@ -291,6 +292,11 @@ export default function App() {
   useEffect(() => {
     setOwnerAuthLoading(false)
   }, [activeVenueId])
+
+  useEffect(() => {
+    const route = window.location.hash || '#/'
+    void trackPageView(route, route.startsWith('#/venue/') ? activeVenue.profile.slug : null)
+  }, [page, activeVenue.profile.slug, requestedCoupleSlug])
 
   /* v1.10.2 auto-load real venue events for authenticated admins */
   useEffect(() => {

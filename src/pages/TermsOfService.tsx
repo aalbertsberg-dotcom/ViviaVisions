@@ -31,7 +31,7 @@ export default function TermsOfService() {
 
         <section><h2>8. Communications</h2><p>ViviaVisions may send transactional communications relating to accounts, invitations, password resets, event messages, security and service operation. Venues may use ViviaVisions to communicate with clients assigned to their events.</p></section>
 
-        <section><h2>9. Third-party services</h2><p>ViviaVisions relies on third-party infrastructure and service providers for hosting, databases, authentication, storage, email delivery and similar operational functions. Third-party websites or products linked from ViviaVisions are governed by their own terms and policies.</p></section>
+        <section><h2>9. Partner listings and third-party services</h2><p>ViviaVisions may display vendor or service-provider listings that are paid, featured, sponsored or otherwise part of a business relationship. A listing does not guarantee the quality, availability, pricing or performance of that provider.</p><p>ViviaVisions relies on third-party infrastructure and service providers for hosting, databases, authentication, storage, email delivery and similar operational functions. Third-party websites or products linked from ViviaVisions are governed by their own terms and policies.</p></section>
 
         <section><h2>10. Paid services</h2><p>Pricing, subscription terms, payment terms, renewal terms and service-specific commitments for a business customer are stated in the applicable Customer Agreement or Order Form. If those documents conflict with these Terms, the Customer Agreement or Order Form controls for that customer.</p></section>
 

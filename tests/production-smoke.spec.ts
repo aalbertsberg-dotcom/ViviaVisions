@@ -74,3 +74,11 @@ test('Chandelier Oaks owner sign-in includes password recovery', async ({ page }
   await expect(page.getByRole('heading', { name: /Chandelier Oaks owner portal/i })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Forgot password?' })).toBeVisible()
 })
+test('Chandelier Oaks shows partner placeholders', async ({ page }) => {
+  await page.goto('/#/venue/chandelier-oaks')
+  const partners = page.getByTestId('vendor-partners')
+  await expect(partners).toBeVisible()
+  await expect(partners.getByText('Southern Lux Rentals')).toBeVisible()
+  await expect(partners.getByText('Party Girls')).toBeVisible()
+  await expect(partners.getByText('Photo Booth Partner')).toBeVisible()
+})
