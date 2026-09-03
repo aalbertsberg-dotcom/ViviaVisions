@@ -20,6 +20,7 @@ export default function ForVenues({ leads, setLeads, onBackHome, onViewVenueDemo
     weddingsPerMonth: 6, inventorySize: '100–250 items', packages: '3–5 packages', notes: '', brandPrimary: '#34483b', brandAccent: '#b58a55', logoDataUrl: '',
   })
   const [needs, setNeeds] = useState<string[]>(['Digital inventory catalog', 'Client portals', 'Venue designer'])
+  const [legalAccepted, setLegalAccepted] = useState(false)
 
   const initials = useMemo(() => form.venueName.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]?.toUpperCase()).join('') || 'VV', [form.venueName])
   const submitted = leads.find((lead) => lead.id === submittedId)
@@ -41,6 +42,10 @@ export default function ForVenues({ leads, setLeads, onBackHome, onViewVenueDemo
     event.preventDefault()
     if (!form.venueName.trim() || !form.contactName.trim() || !form.email.trim()) {
       window.alert('Venue name, contact name and email are required.')
+      return
+    }
+    if (!legalAccepted) {
+      window.alert('Please agree to the Terms of Service and acknowledge the Privacy Policy before submitting.')
       return
     }
     const lead: VenueLead = {
@@ -118,6 +123,11 @@ export default function ForVenues({ leads, setLeads, onBackHome, onViewVenueDemo
           </section>
 
           <div className="demo-submit-note"><strong>Preview environment:</strong> this form is not connected to a live intake system. Use sample information only; submissions stay in this browser.</div>
+          <label className="legal-acceptance">
+            <input type="checkbox" checked={legalAccepted} onChange={(event) => setLegalAccepted(event.target.checked)} />
+            <span>I agree to the <a href="#/terms" onClick={(event) => event.stopPropagation()}>Terms of Service</a> and acknowledge the <a href="#/privacy" onClick={(event) => event.stopPropagation()}>Privacy Policy</a>. I understand this preview request does not create a paid subscription or Customer Agreement.</span>
+          </label>
+          <p className="legal-acceptance__paid">Paid onboarding will require an authorized representative to accept the <a href="#/customer-agreement">Venue & Planner Customer Agreement</a>.</p>
           <button className="button button--primary full-width" type="submit">Request Venue Preview</button>
         </form>
 

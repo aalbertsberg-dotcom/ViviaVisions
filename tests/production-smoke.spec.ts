@@ -51,3 +51,17 @@ test('sign-in choices include VV Admin and admin password recovery', async ({ pa
   await expect(page.getByText(/Create account/i)).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Back to sign-in options/i })).toBeVisible()
 })
+test('legal pages and copyright footer are public', async ({ page }) => {
+  await page.goto('/#/')
+  await expect(page.getByText('© 2026 ViviaVisions. All rights reserved.')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Terms', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Privacy', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Customer Agreement', exact: true })).toBeVisible()
+
+  await page.goto('/#/terms')
+  await expect(page.getByRole('heading', { name: 'Terms of Service' })).toBeVisible()
+  await page.goto('/#/privacy')
+  await expect(page.getByRole('heading', { name: 'Privacy Policy' })).toBeVisible()
+  await page.goto('/#/customer-agreement')
+  await expect(page.getByRole('heading', { name: 'Venue & Planner Customer Agreement' })).toBeVisible()
+})

@@ -4,7 +4,7 @@ import Logo from './Logo'
 import type { VenueProfile, WeddingWorkspace } from '../types'
 import { PLATFORM_NAME, PLATFORM_NAME_UPPER, PLATFORM_SHORT_NAME, POWERED_BY_PLATFORM } from '../config/platform'
 
-export type PageKey = 'home' | 'venues' | 'for-venues' | 'signin' | 'venue' | 'catalog' | 'wedding' | 'planner' | 'media' | 'ai-preview' | 'messages' | 'calendar' | 'summary' | 'admin' | 'manage-events' | 'inventory-admin' | 'venue-content' | 'platform' | 'platform-inventory' | 'production-check' | 'access-check'
+export type PageKey = 'home' | 'venues' | 'for-venues' | 'signin' | 'venue' | 'catalog' | 'wedding' | 'planner' | 'media' | 'ai-preview' | 'messages' | 'calendar' | 'summary' | 'admin' | 'manage-events' | 'inventory-admin' | 'venue-content' | 'platform' | 'platform-inventory' | 'production-check' | 'access-check' | 'terms' | 'privacy' | 'customer-agreement'
 
 type HeaderProps = {
   page: PageKey

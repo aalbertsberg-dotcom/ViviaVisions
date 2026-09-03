@@ -21,6 +21,9 @@ import InventoryManager from './pages/InventoryManager'
 import VenueContentManager from './pages/VenueContentManager'
 import ProductionCheck from './pages/ProductionCheck'
 import AccessCheck from './pages/AccessCheck'
+import TermsOfService from './pages/TermsOfService'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import CustomerAgreement from './pages/CustomerAgreement'
 import { PLATFORM_NAME, POWERED_BY_PLATFORM, platformConfig } from './config/platform'
 import { isDemoClientWorkspace } from './config/demo'
 import { buildPublicAppUrl } from './config/runtime'
@@ -96,7 +99,7 @@ function parseRoute(): RouteState {
     if (parts[2] && scopedPages.includes(parts[2] as PageKey)) return { page: parts[2] as PageKey, coupleSlug: null, venueSlug }
     return { page: 'venue', coupleSlug: null, venueSlug }
   }
-  const allowed: PageKey[] = ['home','venues','for-venues','signin','platform','platform-inventory','production-check','access-check']
+  const allowed: PageKey[] = ['home','venues','for-venues','signin','platform','platform-inventory','production-check','access-check','terms','privacy','customer-agreement']
   return { page: allowed.includes(parts[0] as PageKey) ? parts[0] as PageKey : 'home', coupleSlug: null, venueSlug: null }
 }
 
@@ -387,7 +390,7 @@ export default function App() {
 
   const routeFor = (next: PageKey) => {
     if (next === 'home') return '#/'
-    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-inventory' || next === 'production-check' || next === 'access-check') return `#/${next}`
+    if (next === 'venues' || next === 'for-venues' || next === 'signin' || next === 'platform' || next === 'platform-inventory' || next === 'production-check' || next === 'access-check' || next === 'terms' || next === 'privacy' || next === 'customer-agreement') return `#/${next}`
     if (next === 'venue') return `#/venue/${activeVenue.profile.slug}`
     if (next === 'admin') return `#/venue/${activeVenue.profile.slug}/owner`
     return `#/venue/${activeVenue.profile.slug}/${next}`
@@ -1122,6 +1125,9 @@ export default function App() {
         : <PlatformAdmin authenticated={platformAuthenticated} authLoading={platformAuthLoading} onAuthenticate={authenticatePlatform} onLogout={logoutPlatform} onNavigate={navigate} leads={venueLeads} weddings={dedupedWeddings} venues={venueConfigs} onOpenVenue={openVenueBySlug} onManageVenue={openVenueAsPlatformAdmin} />
       )}
       {page === 'access-check' && <AccessCheck />}
+      {page === 'terms' && <TermsOfService />}
+      {page === 'privacy' && <PrivacyPolicy />}
+      {page === 'customer-agreement' && <CustomerAgreement />}
 
       <footer className="site-footer saas-footer">
         <div className="shell">
@@ -1131,6 +1137,15 @@ export default function App() {
               : platformAuthenticated
                 ? <><span>{PLATFORM_NAME} Admin</span><span>Platform operations · {venueConfigs.length} venue profiles</span></>
                 : <><span>{PLATFORM_NAME}</span><span>Event venue management & planning · venue-first private client workspaces</span></>}
+          </div>
+          <div className="site-footer__legal">
+            <span>© 2026 ViviaVisions. All rights reserved.</span>
+            <nav aria-label="Legal">
+              <a href="#/terms" onClick={(event) => { event.preventDefault(); navigate('terms') }}>Terms</a>
+              <a href="#/privacy" onClick={(event) => { event.preventDefault(); navigate('privacy') }}>Privacy</a>
+              <a href="#/customer-agreement" onClick={(event) => { event.preventDefault(); navigate('customer-agreement') }}>Customer Agreement</a>
+              <a href="mailto:hello@viviavisions.com">Contact</a>
+            </nav>
           </div>
           <div className="site-footer__creator">
             <img src={platformConfig.creator.logoPath} alt="" />
