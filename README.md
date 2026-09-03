@@ -1,4 +1,4 @@
-# ViviaVisions v1.17.1
+# ViviaVisions v1.17.2
 
 **Every detail. Every option. Every vision.**
 
@@ -92,3 +92,8 @@ Adds ViviaVisions Partner placeholders plus first-party analytics for page views
 - Partner clicks now represent partner-card/detail opens; the email CTA remains a separate action.
 - Reorganizes VV Admin analytics into clear Whole Site Traffic and Partner Analytics sections.
 - Clarifies that visits are anonymous browser sessions and that development/testing traffic is included.
+## v1.17.2
+- Moves VV Admin analytics below the primary venue/operations sections.
+- Prevents Playwright Quality/Production Smoke tests from recording page views, partner impressions or partner clicks.
+- Adds migration 011 to reset the analytics-only table once because earlier automated smoke tests polluted the initial counts.
+- Apply migration 011 only AFTER v1.17.2 is deployed and Production Smoke is green.

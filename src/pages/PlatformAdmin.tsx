@@ -335,8 +335,6 @@ export default function PlatformAdmin({
         </article>
       </section>
 
-      <PlatformAnalytics />
-
       <section className="panel vv-admin-section vv-admin-venues">
         <div className="vv-admin-section__heading">
           <div>
@@ -512,6 +510,8 @@ export default function PlatformAdmin({
         <span>{PLATFORM_NAME}</span>
         <span>Platform operations</span>
       </footer>
+      <PlatformAnalytics />
+
     </main>
   )
 }

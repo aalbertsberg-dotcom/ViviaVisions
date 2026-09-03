@@ -1,6 +1,15 @@
 import { supabase } from '../supabase'
 
 const SESSION_KEY = 'viviavisions.analytics.session'
+const DISABLED_KEY = 'viviavisions.analytics.disabled'
+
+function analyticsDisabled() {
+  try {
+    return window.localStorage.getItem(DISABLED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 
 function sessionId() {
   try {
@@ -20,7 +29,7 @@ async function track(
   venueSlug?: string | null,
   vendorKey?: string | null,
 ) {
-  if (!supabase) return
+  if (!supabase || analyticsDisabled()) return
   try {
     await supabase.rpc('track_analytics_event', {
       p_event_type: eventType,
@@ -38,6 +47,7 @@ export const trackPageView = (route: string, venueSlug?: string | null) =>
   track('page_view', route, venueSlug)
 
 export function trackVendorImpression(vendorKey: string, venueSlug: string) {
+  if (analyticsDisabled()) return Promise.resolve()
   const key = `viviavisions.analytics.impression.${venueSlug}.${vendorKey}`
   try {
     if (sessionStorage.getItem(key)) return Promise.resolve()

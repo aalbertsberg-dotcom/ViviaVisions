@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test'
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('viviavisions.analytics.disabled', '1')
+  })
+})
 test('Chandelier Oaks separates real client sign-in from showcase demos', async ({ page }) => {
   await page.goto('/#/venue/chandelier-oaks')
 
