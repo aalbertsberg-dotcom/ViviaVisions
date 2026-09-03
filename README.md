@@ -1,4 +1,4 @@
-# ViviaVisions v1.17.0
+# ViviaVisions v1.17.1
 
 **Every detail. Every option. Every vision.**
 
@@ -86,3 +86,9 @@ git push
 - Paid onboarding is described as a separate Order Form / Customer Agreement sent privately for review and signature.
 ## v1.17.0
 Adds ViviaVisions Partner placeholders plus first-party analytics for page views, anonymous visits, partner impressions, partner clicks and CTR. VV Admin receives a 7/30/90-day analytics panel. Apply migration `202609030010_partner_analytics.sql`. Analytics starts collecting after deployment and is not retroactive.
+## v1.17.1
+- Makes ViviaVisions Partners the primary heading and reduces the supporting heading.
+- Makes every partner card interactive and opens a partner detail view.
+- Partner clicks now represent partner-card/detail opens; the email CTA remains a separate action.
+- Reorganizes VV Admin analytics into clear Whole Site Traffic and Partner Analytics sections.
+- Clarifies that visits are anonymous browser sessions and that development/testing traffic is included.

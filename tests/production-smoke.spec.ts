@@ -82,3 +82,16 @@ test('Chandelier Oaks shows partner placeholders', async ({ page }) => {
   await expect(partners.getByText('Party Girls')).toBeVisible()
   await expect(partners.getByText('Photo Booth Partner')).toBeVisible()
 })
+test('partner cards open details', async ({ page }) => {
+  await page.goto('/#/venue/chandelier-oaks')
+  const partners = page.getByTestId('vendor-partners')
+  await partners.getByRole('button', { name: 'View Southern Lux Rentals partner details' }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Southern Lux Rentals' })).toBeVisible()
+  await expect(page.getByText('Founding ViviaVisions partner')).toBeVisible()
+})
+
+test('platform analytics separates site traffic from partner analytics', async ({ page }) => {
+  await page.goto('/#/platform')
+  await expect(page.getByText('ViviaVisions site analytics')).toHaveCount(0)
+})
