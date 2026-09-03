@@ -1,4 +1,4 @@
-# ViviaVisions v1.18.0
+# ViviaVisions v1.18.1
 
 **Every detail. Every option. Every vision.**
 
@@ -104,3 +104,8 @@ Adds ViviaVisions Partner placeholders plus first-party analytics for page views
 - Admin fields include category, badge, plan, monthly price, website, contact email, service area, logo URL, CTA, placement dates, venue placement, featured status, placeholder status, sort order and internal notes.
 - Public venue partner cards load managed records from Supabase with the v1.17 built-in cards retained as a safe fallback.
 - Migration 012 seeds the four current Chandelier Oaks partner cards into the managed table.
+## v1.18.1 — CI smoke-test correction
+- Updates the Chandelier Oaks owner recovery smoke test to the current `/owner` route.
+- Uses role-scoped partner-card assertions to avoid Playwright strict-mode duplicate-text failures.
+- Scopes Southern Lux modal assertions inside the dialog and validates the managed `Founding` plan label.
+- No application behavior or database schema changes.

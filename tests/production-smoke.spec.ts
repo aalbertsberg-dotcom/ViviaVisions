@@ -75,7 +75,8 @@ test('legal pages and copyright footer are public', async ({ page }) => {
 })
 
 test('Chandelier Oaks owner sign-in includes password recovery', async ({ page }) => {
-  await page.goto('/#/venue/chandelier-oaks/admin')
+  await page.goto('/#/venue/chandelier-oaks/owner')
+  await expect(page).toHaveURL(/#\/venue\/chandelier-oaks\/owner$/)
   await expect(page.getByRole('heading', { name: /Chandelier Oaks owner portal/i })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Forgot password?' })).toBeVisible()
 })
@@ -83,17 +84,19 @@ test('Chandelier Oaks shows partner placeholders', async ({ page }) => {
   await page.goto('/#/venue/chandelier-oaks')
   const partners = page.getByTestId('vendor-partners')
   await expect(partners).toBeVisible()
-  await expect(partners.getByText('Southern Lux Rentals')).toBeVisible()
-  await expect(partners.getByText('Party Girls')).toBeVisible()
-  await expect(partners.getByText('Photo Booth Partner')).toBeVisible()
+  await expect(partners.getByRole('heading', { name: 'Southern Lux Rentals', exact: true })).toBeVisible()
+  await expect(partners.getByRole('heading', { name: 'Party Girls', exact: true })).toBeVisible()
+  await expect(partners.getByRole('heading', { name: 'Photo Booth Partner', exact: true })).toBeVisible()
 })
 test('partner cards open details', async ({ page }) => {
   await page.goto('/#/venue/chandelier-oaks')
   const partners = page.getByTestId('vendor-partners')
   await partners.getByRole('button', { name: 'View Southern Lux Rentals partner details' }).click()
-  await expect(page.getByRole('dialog')).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Southern Lux Rentals' })).toBeVisible()
-  await expect(page.getByText('Founding ViviaVisions partner')).toBeVisible()
+
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole('heading', { name: 'Southern Lux Rentals', exact: true })).toBeVisible()
+  await expect(dialog.getByText('Founding', { exact: true })).toBeVisible()
 })
 
 test('platform analytics separates site traffic from partner analytics', async ({ page }) => {
