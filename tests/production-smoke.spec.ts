@@ -64,4 +64,13 @@ test('legal pages and copyright footer are public', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Privacy Policy' })).toBeVisible()
   await page.goto('/#/customer-agreement')
   await expect(page.getByRole('heading', { name: 'Venue & Planner Customer Agreement' })).toBeVisible()
+  await expect(page.getByText('Before a paid customer signs')).toHaveCount(0)
+  await expect(page.getByText('Order Form acceptance language')).toHaveCount(0)
+  await expect(page.getByText('Customer legal name')).toHaveCount(0)
+})
+
+test('Chandelier Oaks owner sign-in includes password recovery', async ({ page }) => {
+  await page.goto('/#/venue/chandelier-oaks/admin')
+  await expect(page.getByRole('heading', { name: /Chandelier Oaks owner portal/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Forgot password?' })).toBeVisible()
 })

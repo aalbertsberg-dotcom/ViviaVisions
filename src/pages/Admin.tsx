@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import type { PageKey } from '../components/Header'
 import { packageById, venueConfigById } from '../data'
 import type { WeddingWorkspace } from '../types'
@@ -7,6 +7,8 @@ import { PLATFORM_NAME } from '../config/platform'
 import { isDemoClientWorkspace } from '../config/demo'
 import { buildPublicAppUrl } from '../config/runtime'
 import ClientAccessManager from '../components/ClientAccessManager'
+import { sendPasswordReset, signOut as signOutSupabase, updatePassword } from '../lib/repositories/auth'
+import { supabase } from '../lib/supabase'
 
 type AdminProps = {
   venueId: string
@@ -24,6 +26,18 @@ type AdminProps = {
   platformAdminAccess?: boolean
 }
 
+function hasOwnerRecoveryMarker() {
+  return new URLSearchParams(window.location.search).get('ownerRecovery') === '1'
+}
+
+function clearOwnerRecoveryMarker() {
+  const url = new URL(window.location.href)
+  url.searchParams.delete('ownerRecovery')
+  url.searchParams.delete('code')
+  const query = url.searchParams.toString()
+  window.history.replaceState({}, '', `${url.pathname}${query ? `?${query}` : ''}${url.hash}`)
+}
+
 function formatDate(value: string) { return new Date(`${value}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) }
 function venueUnread(wedding: WeddingWorkspace) { return wedding.messages.filter((message) => message.senderRole !== 'venue' && !message.readByVenue).length }
 
@@ -39,6 +53,11 @@ export default function Admin({ venueId, weddings, activeWeddingId, onSelectWedd
   const [ownerPassword, setOwnerPassword] = useState('')
   const [authSubmitting, setAuthSubmitting] = useState(false)
   const [accessError, setAccessError] = useState('')
+  const [accessStatus, setAccessStatus] = useState('')
+  const [failedSignIns, setFailedSignIns] = useState(0)
+  const [recoveryMode, setRecoveryMode] = useState(hasOwnerRecoveryMarker)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [couple, setCouple] = useState('')
   const [date, setDate] = useState('')
@@ -50,6 +69,72 @@ export default function Admin({ venueId, weddings, activeWeddingId, onSelectWedd
   const [accessWeddingId, setAccessWeddingId] = useState<string | null>(null)
   const [copyStatus, setCopyStatus] = useState('')
   const isChandelier = venue.id === 'venue-chandelier-oaks'
+
+  useEffect(() => {
+    if (!supabase || !isChandelier) return
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true)
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [isChandelier])
+
+  const requestOwnerPasswordReset = async () => {
+    const cleanEmail = ownerEmail.trim().toLowerCase()
+    if (!cleanEmail) {
+      setAccessError('Enter your email address first.')
+      return
+    }
+
+    setAuthSubmitting(true)
+    setAccessError('')
+    setAccessStatus('')
+
+    try {
+      await sendPasswordReset(
+        cleanEmail,
+        buildPublicAppUrl(`#/venue/${encodeURIComponent(venue.slug)}/admin`, { ownerRecovery: '1' }),
+      )
+      setAccessStatus('If that email has an account, a password reset link has been sent. Check your inbox and spam folder.')
+    } catch (resetError) {
+      setAccessError(resetError instanceof Error ? resetError.message : 'Unable to send the password reset email.')
+    } finally {
+      setAuthSubmitting(false)
+    }
+  }
+
+  const submitOwnerRecovery = async (event: FormEvent) => {
+    event.preventDefault()
+    setAccessError('')
+    setAccessStatus('')
+
+    if (newPassword.length < 8) {
+      setAccessError('Use a password with at least 8 characters.')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setAccessError('The new passwords do not match.')
+      return
+    }
+
+    setAuthSubmitting(true)
+
+    try {
+      await updatePassword(newPassword)
+      await signOutSupabase()
+      clearOwnerRecoveryMarker()
+      setRecoveryMode(false)
+      setOwnerPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setFailedSignIns(0)
+      setAccessStatus(`Password updated. Sign in to ${venue.shortName} with your new password.`)
+    } catch (recoveryError) {
+      setAccessError(recoveryError instanceof Error ? recoveryError.message : 'Unable to update the password.')
+    } finally {
+      setAuthSubmitting(false)
+    }
+  }
 
   const sortedWeddings = useMemo(() => [...weddings].sort((a, b) => a.profile.date.localeCompare(b.profile.date)), [weddings])
   const activeWedding = weddings.find((wedding) => wedding.id === activeWeddingId) ?? weddings[0]
@@ -65,21 +150,40 @@ export default function Admin({ venueId, weddings, activeWeddingId, onSelectWedd
           <h1>{isChandelier ? 'Chandelier Oaks owner portal.' : 'Venue owner dashboard.'}</h1>
           <p className="owner-access-lead">{isChandelier ? 'Enter the private Chandelier Oaks operations area for weddings, inventory, planning, messages and setup.' : `This gate represents the private ${venue.shortName} admin area. Production would use secure authentication and venue-specific permissions.`}</p>
           {isChandelier ? (
-            authLoading ? <div className="owner-access-note"><strong>Checking your session…</strong></div> : (
+            authLoading ? <div className="owner-access-note"><strong>Checking your session…</strong></div> : recoveryMode ? (
+              <form className="owner-access-form owner-recovery-form" onSubmit={submitOwnerRecovery}>
+                <label htmlFor="ownerNewPassword">New password</label>
+                <input id="ownerNewPassword" type="password" minLength={8} autoComplete="new-password" value={newPassword} onChange={(event) => { setNewPassword(event.target.value); setAccessError(''); setAccessStatus('') }} autoFocus required />
+                <label htmlFor="ownerConfirmPassword">Confirm new password</label>
+                <input id="ownerConfirmPassword" type="password" minLength={8} autoComplete="new-password" value={confirmPassword} onChange={(event) => { setConfirmPassword(event.target.value); setAccessError(''); setAccessStatus('') }} required />
+                {accessError && <div className="owner-access-error" role="alert">{accessError}</div>}
+                {accessStatus && <div className="client-auth-status" role="status">{accessStatus}</div>}
+                <button className="button button--primary full-width" type="submit" disabled={authSubmitting}>{authSubmitting ? 'Updating password…' : 'Update password'}</button>
+              </form>
+            ) : (
               <form className="owner-access-form" onSubmit={async (event) => {
                 event.preventDefault()
                 setAuthSubmitting(true)
                 setAccessError('')
+                setAccessStatus('')
                 const result = await onAuthenticate(ownerEmail, ownerPassword)
-                if (!result.ok) setAccessError(result.error ?? 'Unable to sign in.')
+                if (!result.ok) {
+                  setAccessError(result.error ?? 'Unable to sign in.')
+                  setFailedSignIns((count) => count + 1)
+                } else {
+                  setFailedSignIns(0)
+                }
                 setAuthSubmitting(false)
               }}>
                 <label htmlFor="ownerEmail">Email</label>
-                <input id="ownerEmail" type="email" autoComplete="username" value={ownerEmail} onChange={(event) => { setOwnerEmail(event.target.value); setAccessError('') }} autoFocus required />
+                <input id="ownerEmail" type="email" autoComplete="username" value={ownerEmail} onChange={(event) => { setOwnerEmail(event.target.value); setAccessError(''); setAccessStatus('') }} autoFocus required />
                 <label htmlFor="ownerPassword">Password</label>
-                <input id="ownerPassword" type="password" autoComplete="current-password" value={ownerPassword} onChange={(event) => { setOwnerPassword(event.target.value); setAccessError('') }} required />
+                <input id="ownerPassword" type="password" autoComplete="current-password" value={ownerPassword} onChange={(event) => { setOwnerPassword(event.target.value); setAccessError(''); setAccessStatus('') }} required />
+                <button className="text-link client-forgot-password" type="button" onClick={() => { void requestOwnerPasswordReset() }} disabled={authSubmitting}>Forgot password?</button>
                 <small>Use the account assigned to the {venue.shortName} owner or staff team. Owner access is verified when you sign in.</small>
+                {failedSignIns >= 3 && <div className="owner-access-note"><strong>Having trouble signing in?</strong> Use Forgot password above to reset the password for your assigned account.</div>}
                 {accessError && <div className="owner-access-error" role="alert">{accessError}</div>}
+                {accessStatus && <div className="client-auth-status" role="status">{accessStatus}</div>}
                 <button className="button button--primary full-width" type="submit" disabled={authSubmitting}>{authSubmitting ? 'Signing in…' : `Sign in to ${venue.shortName}`}</button>
               </form>
             )

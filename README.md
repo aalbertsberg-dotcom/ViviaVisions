@@ -1,4 +1,4 @@
-# ViviaVisions v1.16.0
+# ViviaVisions v1.16.1
 
 **Every detail. Every option. Every vision.**
 
@@ -78,3 +78,9 @@ git add <intended files>
 git commit -m "Describe the release"
 git push
 ```
+## v1.16.1
+
+- Chandelier Oaks owner/staff sign-in now includes password reset and a complete recovery flow.
+- After repeated failed owner/staff sign-ins, the page explicitly points users to password reset.
+- The public Customer Agreement now contains only the legal terms; internal signature/order-form template instructions are no longer public.
+- Paid onboarding is described as a separate Order Form / Customer Agreement sent privately for review and signature.

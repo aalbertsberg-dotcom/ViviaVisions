@@ -6,13 +6,9 @@ export default function CustomerAgreement() {
       <header className="legal-page__hero">
         <p className="eyebrow">VIVIAVISIONS · BUSINESS TERMS</p>
         <h1>Venue & Planner Customer Agreement</h1>
-        <p>Template effective {EFFECTIVE_DATE}</p>
+        <p>Effective {EFFECTIVE_DATE}</p>
       </header>
 
-      <section className="panel legal-page__notice legal-page__notice--agreement">
-        <strong>Before a paid customer signs</strong>
-        <p>The final Order Form should identify the legal ViviaVisions entity, customer legal name, pricing, subscription term and any negotiated terms. Have counsel review this template before using it for paid customer contracts.</p>
-      </section>
 
       <article className="legal-document">
         <section><h2>1. Agreement and parties</h2><p>This Venue & Planner Customer Agreement (“Agreement”) is between ViviaVisions, or the legal ViviaVisions entity identified in the applicable Order Form (“ViviaVisions” or “Provider”), and the venue, planner, event designer, rental provider or other business identified in the Order Form (“Customer”).</p><p>This Agreement, the applicable Order Form, Terms of Service and Privacy Policy form the parties’ agreement. If there is a conflict, the Order Form controls first, then this Agreement, then the Terms of Service.</p></section>
@@ -65,7 +61,7 @@ export default function CustomerAgreement() {
 
         <section><h2>25. General</h2><p>Neither party may assign this Agreement without the other’s consent except to an affiliate or in connection with a merger, reorganization or sale of substantially all assets, provided the assignee accepts the Agreement. The parties are independent contractors. If a provision is unenforceable, the remainder stays effective. This Agreement and incorporated documents are the entire agreement concerning the service.</p></section>
 
-        <section className="legal-signature-template"><h2>26. Order Form acceptance language</h2><p>Use this checkbox for a paid customer:</p><blockquote>I am authorized to bind the customer identified in this Order Form. On the customer’s behalf, I agree to the ViviaVisions Venue & Planner Customer Agreement and Terms of Service and acknowledge the Privacy Policy.</blockquote><div className="legal-signature-grid"><div><span>Customer legal name</span><strong>____________________________</strong></div><div><span>Authorized representative</span><strong>____________________________</strong></div><div><span>Title</span><strong>____________________________</strong></div><div><span>Date</span><strong>____________________________</strong></div></div></section>
+
       </article>
 
       <div className="legal-page__footer-links"><a href="#/terms">Terms of Service</a><a href="#/privacy">Privacy Policy</a><a href="#/">ViviaVisions home</a></div>

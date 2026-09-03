@@ -127,7 +127,7 @@ export default function ForVenues({ leads, setLeads, onBackHome, onViewVenueDemo
             <input type="checkbox" checked={legalAccepted} onChange={(event) => setLegalAccepted(event.target.checked)} />
             <span>I agree to the <a href="#/terms" onClick={(event) => event.stopPropagation()}>Terms of Service</a> and acknowledge the <a href="#/privacy" onClick={(event) => event.stopPropagation()}>Privacy Policy</a>. I understand this preview request does not create a paid subscription or Customer Agreement.</span>
           </label>
-          <p className="legal-acceptance__paid">Paid onboarding will require an authorized representative to accept the <a href="#/customer-agreement">Venue & Planner Customer Agreement</a>.</p>
+          <p className="legal-acceptance__paid">If you move forward with paid service, ViviaVisions will send a separate Order Form / Customer Agreement for an authorized representative to review and sign.</p>
           <button className="button button--primary full-width" type="submit">Request Venue Preview</button>
         </form>
 
